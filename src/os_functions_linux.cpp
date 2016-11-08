@@ -105,14 +105,30 @@ namespace scatdb{
 				int res = 0;
 				res = getlogin_r(hname, len);
 				if (res) {
-					int sres = 0;
 					char errbuf[len];
-					sres = strerror_r(res, errbuf, len);
+					// strerror_r has awkward conventions.
+					char* errbufres = strerror_r(res, errbuf, len);
 					static const std::string serr("ERROR in getUsername");
-					ryan_log("os_functions", scatdb::logging::ERROR,
-						"getUsername failed with error " << res
-						<< ", which means: " << errbuf);
-					username = serr;
+					ryan_log("os_functions", scatdb::logging::NOTIFICATION,
+						"getUsername failed when directly trying to "
+						"determine the username using getlogin_r. "
+						"The error code was " << res
+						<< ", which means: " << errbufres  << ". Will try "
+						"to use the LOGNAME environment variable.");
+					// Try again by reading the LOGNAME environment variable.
+					auto hInfo = scatdb::debug::getProcessInfo(getPID());
+
+					if (hInfo->expandedEnviron.count("LOGNAME")) {
+						username = hInfo->expandedEnviron.at("LOGNAME");
+						ryan_log("os_functions", scatdb::logging::NOTIFICATION,
+							"getUsername succeeded by reading LOGNAME.");
+					} else { 
+						username = serr;
+						ryan_log("os_functions", scatdb::logging::ERROR,
+							"getUsername failed to determine the username."
+							);
+
+					}
 				} else {
 					username = std::string(hname);
 				}
