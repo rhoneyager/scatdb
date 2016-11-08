@@ -119,11 +119,11 @@ The scattering database and the associated code are released under the MIT Licen
 
 ## Credits
 
-An early implementation of the LOWESS algorithm is provided by Peter Glaus [http://www.cs.man.ac.uk/~glausp/ and https://github.com/BitSeq/BitSeq] (Artistic License 2.0).
+An early implementation of the LOWESS algorithm is provided by Peter Glaus [http://www.cs.man.ac.uk/~glausp/] and [https://github.com/BitSeq/BitSeq] (Artistic License 2.0).
 
 The MurmurHash3 algorithm was written by Austin Appleby, who placed it in the public domain [https://github.com/aappleby/smhasher].
 
-The original scatdb and scatdb_ag databases are available at http://cirrus.met.fsu.edu/research/scatdb.html .
+The original scatdb and scatdb_ag databases are available at [http://cirrus.met.fsu.edu/research/scatdb.html].
 
 
 ## Problems / Suggestions / Contributions
