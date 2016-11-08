@@ -1,7 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 //#include "resource.h"
-#include "@CMAKE_SOURCE_DIR@/Ryan_Scat/resource.h"
+#include "@CMAKE_SOURCE_DIR@/scatdb/resource.h"
 #include "cmake-settings.h"
 
 #define QUOTE(str) #str
@@ -75,7 +75,7 @@ BEGIN
             VALUE "FileDescription", "@DESCRIPTION@"
             VALUE "FileVersion", "@MAJOR@,@MINOR@,@REVISION@"
             VALUE "InternalName", "@INTERNALNAME@"
-            VALUE "LegalCopyright", "@YEAR@ Ryan Honeyager"
+            VALUE "LegalCopyright", "@YEAR@ Florida State University, Ryan Honeyager"
             VALUE "OriginalFilename", "@INTERNALNAME@_" CONF ".@EXTENSION@"
             VALUE "ProductName", "@PRODUCTNAME@"
             VALUE "ProductVersion", "@MAJOR@.@MINOR@.@REVISION@.@GITHASHVAR@"

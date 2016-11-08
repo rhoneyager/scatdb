@@ -60,7 +60,7 @@ namespace scatdb {
 		int icols = (int)intMat.cols();
 		int fcols = (int)floatMat.cols();
 		for (int i = 0; i < rows; ++i) {
-			fprintf(f, "%d,%f,%f,%f,%f,%e,%e,%e,%e,%e,%f\n",
+			fprintf(f, "%lld,%f,%f,%f,%f,%e,%e,%e,%e,%e,%f\n",
 				intMat(i, 0),
 				floatMat(i, 0), floatMat(i, 1), floatMat(i, 2), floatMat(i, 3),
 				floatMat(i, 4), floatMat(i, 5), floatMat(i, 6), floatMat(i, 7),

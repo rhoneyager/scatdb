@@ -66,7 +66,7 @@ namespace scatdb {
 			data_entries::SDBR_NUM_DATA_ENTRIES_FLOATS,
 			[](int i) -> std::string { return std::string(data_entries::stringify<float>(i)); });
 
-		scatdb::plugins::hdf5::addAttr<int>(grp, "Count", count);
+		scatdb::plugins::hdf5::addAttr<int>(grp, "Count", (int) count);
 	}
 
 	void db::writeHDFfile(std::shared_ptr<H5::Group> grp) const {
@@ -95,7 +95,7 @@ namespace scatdb {
 
 			int prev = -1;
 			for (int i = 0; i < intMat.rows(); ++i) {
-				const int &val = intMat(i, data_entries::SDBR_FLAKETYPE);
+				const int &val = (int) intMat(i, data_entries::SDBR_FLAKETYPE);
 				if (val != prev) {
 					prev = val;
 					known_cats.emplace(val);

@@ -38,8 +38,8 @@ extern "C" {
 	}
 
 	void prepString(uint64_t maxlen, char* buffer, const std::string &s) {
-		int cplen = maxlen;
-		if (s.size() + 1 < maxlen) cplen = (int) s.size();
+		size_t cplen = (size_t) maxlen;
+		if (s.size() + 1 < maxlen) cplen = s.size();
 		strncpy_s(buffer, cplen, s.c_str(), cplen);
 		buffer[cplen] = '\0';
 	}
