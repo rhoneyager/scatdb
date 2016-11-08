@@ -79,28 +79,39 @@ Once a selection is made, it is possible to calculate the statistics with the --
 The package supersedes Guosheng Liu's original scatdb release, as well as Holly Nowell's scatdb_ag database.
 
 Flake categories are listed below:
-- Ids 0-10 are for the pristine snowflakes of Liu [2004] and Liu [2008]. There are data for 233, 243, 253, 263 and 273 K. Numerous frequencies have been included (3, 5, 9, 10, 13.4, 15, 19, 24.1, 35.6, 50, 60, 70, 80, 85.5, 90, 94, 118, 150, 166, 183, 220 and 340 GHz).
-- Ids 20-22 are for bullet rosette aggregates, described in Nowell, Liu and Honeyager [2013] and Honeyager, Liu and Nowell [2016]. Over one thousand aggregates are included. We currently have results only for 263 K, but extrapolation is possible by examining the behavior of the Liu [2004,2008] particles over the appropriate ranges. Ten frequencies are currently available (10.65, 13.6, 18.7, 23.8, 35.6, 36.5, 89, 94, 165.5 and 183.31 GHz).
+- Ids 0-10 are for the pristine snowflakes of Liu (2004) and Liu (2008). There are data for 233, 243, 253, 263 and 273 K. Numerous frequencies have been included (3, 5, 9, 10, 13.4, 15, 19, 24.1, 35.6, 50, 60, 70, 80, 85.5, 90, 94, 118, 150, 166, 183, 220 and 340 GHz).
+- Ids 20-22 are for bullet rosette aggregates, described in Nowell, Liu and Honeyager (2013) and Honeyager, Liu and Nowell (2016). Over one thousand aggregates are included. We currently have results only for 263 K, but extrapolation is possible by examining the behavior of the Liu (2004,2008) particles over the appropriate ranges. Ten frequencies are currently available (10.65, 13.6, 18.7, 23.8, 35.6, 36.5, 89, 94, 165.5 and 183.31 GHz).
 
 Flake Category Listing
+-------
 
-| Id | Description |
-| --- | -------- |
-| 0 | Liu [2004] Long hexagonal column l/d=4 |
-| 1 | Liu [2004] Short hexagonal column l/d=2 |
-| 2 | Liu [2004] Block hexagonal column l/d=1 |
-| 3 | Liu [2004] Thick hexagonal plate l/d=0.2 |
-| 4 | Liu [2004] Thin hexagonal plate l/d=0.05 |
-| 5 | Liu [2008] 3-bullet rosette |
-| 6 | Liu [2008] 4-bullet rosette |
-| 7 | Liu [2008] 5-bullet rosette |
-| 8 | Liu [2008] 6-bullet rosette |
-| 9 | Liu [2008] sector-like snowflake |
-| 10 | Liu [2008] dendrite snowflake |
-| 20 | Nowell, Liu and Honeyager [2013] Rounded |
-| 21 | Honeyager, Liu and Nowell [2016] Oblate |
-| 22 | Honeyager, Liu and Nowell [2016] Prolate |
+| Id | Source | Description |
+| --- | ------ | -------- |
+| 0 | Liu (2004) |  Long hexagonal column l/d=4 |
+| 1 | Liu (2004) | Short hexagonal column l/d=2 |
+| 2 | Liu (2004) | Block hexagonal column l/d=1 |
+| 3 | Liu (2004) | Thick hexagonal plate l/d=0.2 |
+| 4 | Liu (2004) | Thin hexagonal plate l/d=0.05 |
+| 5 | Liu (2008) | 3-bullet rosette |
+| 6 | Liu (2008) | 4-bullet rosette |
+| 7 | Liu (2008) | 5-bullet rosette |
+| 8 | Liu (2008) | 6-bullet rosette |
+| 9 | Liu (2008) | sector-like snowflake |
+| 10 | Liu (2008) | dendrite snowflake |
+| 20 | Nowell, Liu and Honeyager (2013) | Rounded aggregates with aspect ratio near 0.9 |
+| 21 | Honeyager, Liu and Nowell (2016) | Oblate aggregates with ar near 0.6 |
+| 22 | Honeyager, Liu and Nowell (2016) | Prolate aggregates with ar near 0.6 |
 
+Papers
+---------
+
+[Liu 2004](http://dx.doi.org/10.1175/1520-0469(2004)061%3C2441:AOSSPO%3E2.0.CO;2)
+
+[Liu 2008](http://journals.ametsoc.org/doi/abs/10.1175/2008BAMS2486.1)
+
+[Nowell, Liu, Honeyager 2013](http://onlinelibrary.wiley.com/doi/10.1002/jgrd.50620/abstract)
+
+[Honeyager, Liu, Nowell 2016](http://dx.doi.org/10.1016/j.jqsrt.2015.10.025)
 
 ## Work in progress / planned work
 
@@ -119,14 +130,14 @@ The scattering database and the associated code are released under the MIT Licen
 
 ## Credits
 
-An early implementation of the LOWESS algorithm is provided by Peter Glaus [http://www.cs.man.ac.uk/~glausp/] and [https://github.com/BitSeq/BitSeq] (Artistic License 2.0).
+An early implementation of the LOWESS algorithm is provided by Peter Glaus [see here](http://www.cs.man.ac.uk/~glausp/) and [here](https://github.com/BitSeq/BitSeq) (Artistic License 2.0).
 
-The MurmurHash3 algorithm was written by Austin Appleby, who placed it in the public domain [https://github.com/aappleby/smhasher].
+The MurmurHash3 algorithm was written by Austin Appleby, who placed it in the public domain. [site] (https://github.com/aappleby/smhasher).
 
-The original scatdb and scatdb_ag databases are available at [http://cirrus.met.fsu.edu/research/scatdb.html].
+The original scatdb and scatdb_ag databases are available [here](http://cirrus.met.fsu.edu/research/scatdb.html).
 
 
 ## Problems / Suggestions / Contributions
 
-Contact Ryan Honeyager (rhoneyager@fsu.edu).
+Contact Ryan Honeyager <rhoneyager@fsu.edu> or Guosheng Liu <gliu@fsu.edu>.
 
