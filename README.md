@@ -61,9 +61,14 @@ sudo make install
 
 Example programs are in the apps/ subdirectory. SCATDB is primarily written in C++, though it has an extensive C interface. Fortran programs may link to the library using the C interface. C++ header files are denoted with the .hpp extension, and C-only headers use .h.
 
+Example program syntax:
+```
+scatdb_example_cpp -y 5,6,7,8 -f 13/14 -T 259/265 -m 3/4 --stats
+```
+
 The applications all should automatically detect the location of the scattering database. By default, it is located in **'scatdb.hdf5'**, and contains tables for cross sections and phase functions. If the database is not found, then it can be specified by setting the **'scatdb_db'** environment variable, or by specifying the **'-d {dbfile}'** option at the command prompt.
 
-The scatdb_example_cpp application provides several options for reading and subsetting the database. You can subset by frequency, temperature, ice solid sphere-equivalent effective radius, maximum dimension, aspect ratio, and snowflake classification. These options all read a string, and the string can be a comma-separated list (e.g. for flake types, **'-y 3,4,5,6'** to select small bullet rosettes only) or can be expressed in a range notation (e.g. for frequencies between 13 and 14 GHz: **'-f 13/14'**). **Because floating-point values are not exact, frequencies and temperatures should always be expressed in range notation to the nearest GHz or degree K**
+The scatdb_example_cpp application provides several options for reading and subsetting the database. You can subset by frequency, temperature, ice solid sphere-equivalent effective radius, maximum dimension, aspect ratio, and snowflake classification. These options all read a string, and the string can be a comma-separated list (e.g. for flake types, **'-y 5,6,7,8'** to select small bullet rosettes only) or can be expressed in a range notation (e.g. for frequencies between 13 and 14 GHz: **'-f 13/14'**). **Because floating-point values are not exact, frequencies and temperatures should always be expressed in range notation to the nearest GHz or degree K**
 
 The selected data can be re-saved at another location, by specifying an output file. HDF5 files are detected by specifying a .hdf5 extension. This file format is recommended because it preserves the phase functions of the particles. Comma-separated-value files can also be written by specifying a .csv extension. These files can export either only 1) the overall single scattering properties or 2) the phase function for a single database record. To re-use the selected data, you can tell the program to load the saved hdf5 file with the -d option.
 
@@ -78,6 +83,7 @@ Flake categories are listed below:
 - Ids 20-22 are for bullet rosette aggregates, described in Nowell, Liu and Honeyager [2013] and Honeyager, Liu and Nowell [2016]. Over one thousand aggregates are included. We currently have results only for 263 K, but extrapolation is possible by examining the behavior of the Liu [2004,2008] particles over the appropriate ranges. Ten frequencies are currently available (10.65, 13.6, 18.7, 23.8, 35.6, 36.5, 89, 94, 165.5 and 183.31 GHz).
 
 Flake Category Listing
+
 | Id | Description |
 | --- | -------- |
 | 0 | Liu [2004] Long hexagonal column l/d=4 |
