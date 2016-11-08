@@ -1,0 +1,13 @@
+#pragma once
+#define scatdb_MAJOR @MAJOR@
+#define scatdb_MINOR @MINOR@
+#define scatdb_REVISION @REVISION@
+#define scatdb_GitHash "@GITHASHVAR@"
+#define scatdb_GitBranch "@GITREFSPECVAR@"
+#define COMPRESS_ZLIB @COMPRESS_ZLIB@
+#define COMPRESS_GZIP @COMPRESS_GZIP@
+#define COMPRESS_BZIP2 0
+//@COMPRESS_BZIP2@
+#define COMPRESS_SZIP @COMPRESS_SZIP@
+
+
