@@ -210,7 +210,7 @@ namespace scatdb{
 					// both internally use null-terminated strings
 					// TODO: figure out what to do with this.
 					path pcmd(pp / "cmdline");
-					ifstream scmdline(pcmd.string().c_str());
+					std::ifstream scmdline(pcmd.string().c_str());
 					const int length = 1024;
 					char *buffer = new char[length];
 					while (scmdline.good())
@@ -224,7 +224,7 @@ namespace scatdb{
 					//		'\0', ' ');
 
 					path penv(pp / "environ");
-					ifstream senviron(penv.string().c_str());
+					std::ifstream senviron(penv.string().c_str());
 
 					while (senviron.good())
 					{
