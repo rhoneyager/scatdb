@@ -25,6 +25,8 @@
 #include <pwd.h>
 #include <dlfcn.h>
 #include <link.h>
+#include <cstring>
+#include <errno.h>
 #include "../private/os_functions_linux.hpp"
 
 namespace scatdb{
@@ -103,9 +105,13 @@ namespace scatdb{
 				int res = 0;
 				res = getlogin_r(hname, len);
 				if (res) {
+					int sres = 0;
+					char errbuf[len];
+					sres = strerror_r(res, errbuf, len);
 					static const std::string serr("ERROR in getUsername");
 					ryan_log("os_functions", scatdb::logging::ERROR,
-						"getUsername failed with error " << res);
+						"getUsername failed with error " << res
+						<< ", which means: " << errbuf);
 					username = serr;
 				} else {
 					username = std::string(hname);
@@ -210,7 +216,7 @@ namespace scatdb{
 					// both internally use null-terminated strings
 					// TODO: figure out what to do with this.
 					path pcmd(pp / "cmdline");
-					ifstream scmdline(pcmd.string().c_str());
+					std::ifstream scmdline(pcmd.string().c_str());
 					const int length = 1024;
 					char *buffer = new char[length];
 					while (scmdline.good())
@@ -224,7 +230,7 @@ namespace scatdb{
 					//		'\0', ' ');
 
 					path penv(pp / "environ");
-					ifstream senviron(penv.string().c_str());
+					std::ifstream senviron(penv.string().c_str());
 
 					while (senviron.good())
 					{
