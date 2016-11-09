@@ -17,7 +17,7 @@ namespace scatdb {
 			intFilters.resize(db::data_entries::SDBR_NUM_DATA_ENTRIES_INTS);
 		}
 		std::vector<scatdb::splitSet::intervals<float>  > floatFilters;
-		std::vector<scatdb::splitSet::intervals<int> > intFilters;
+		std::vector<scatdb::splitSet::intervals<uint64_t> > intFilters;
 		enum class SortDataType { FLOATS, INTS };
 		struct sortType {
 			SortDataType sortDataType;

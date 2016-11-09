@@ -193,6 +193,7 @@ namespace scatdb
 			std::string dbfile;
 			if (vm.count("dbfile")) dbfile = vm["dbfile"].as<string>();
 			db::findDB(dbfile);
+			db::loadDB(dbfile.c_str());
 
 			ryan_log("dll", ::scatdb::logging::NORMAL, spreambles);
 		}

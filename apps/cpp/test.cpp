@@ -105,11 +105,7 @@ int main(int argc, char** argv) {
 		}
 
 		using namespace scatdb;
-		string dbfile;
-		db::findDB(dbfile);
-		if (!dbfile.size()) doHelp("Unable to detect database file.");
-		cerr << "Database file is at: " << dbfile << endl;
-		auto sdb = db::loadDB(dbfile.c_str());
+		auto sdb = db::loadDB();
 		cerr << "Database loaded. Performing filtering." << endl;
 
 		auto f = filter::generate();
