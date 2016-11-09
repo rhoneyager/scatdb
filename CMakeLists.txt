@@ -25,6 +25,7 @@ set(REVISION 0)
 set(SCATDB_VERSION
 	${MAJOR}.${MINOR}.${REVISION} )
 addBaseProject()
+addInstallDirs(scatdb)
 
 addBoostUniform(filesystem program_options system iostreams date_time )
 
