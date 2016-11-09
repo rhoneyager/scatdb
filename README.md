@@ -129,7 +129,7 @@ Flake Category Listing
 
 The package supersedes Guosheng Liu's original scatdb release, as well as Holly Nowell's scatdb_ag database.
 
-Flake categories are listed below:
+Flake categories are listed above.
 - Ids 0-10 are for the pristine snowflakes of Liu (2004) and Liu (2008). There are data for 233, 243, 253, 263 and 273 K. Numerous frequencies have been included (3, 5, 9, 10, 13.4, 15, 19, 24.1, 35.6, 50, 60, 70, 80, 85.5, 90, 94, 118, 150, 166, 183, 220 and 340 GHz).
 - Ids 20-22 are for bullet rosette aggregates, described in Nowell, Liu and Honeyager (2013) and Honeyager, Liu and Nowell (2016). Over one thousand aggregates are included. We currently have results only for 263 K, but extrapolation is possible by examining the behavior of the Liu (2004,2008) particles over the appropriate ranges. Ten frequencies are currently available (10.65, 13.6, 18.7, 23.8, 35.6, 36.5, 89, 94, 165.5 and 183.31 GHz).
 
