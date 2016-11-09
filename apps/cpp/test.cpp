@@ -44,15 +44,14 @@ int main(int argc, char** argv) {
 			("list-flaketypes", "List valid flaketypes")
 			;
 
-		desc.add(cmdline).add(config);
-		oall.add(cmdline).add(config).add(hidden);
+		desc.add(cmdline); //.add(config);
+		oall.add(cmdline).add(hidden).add(config);
 
 		po::variables_map vm;
 		po::store(po::command_line_parser(argc, argv).
 			options(oall).run(), vm);
 		po::notify(vm);
 
-		scatdb::debug::process_static_options(vm);
 
 		auto doHelp = [&](const std::string& s)
 		{
@@ -60,8 +59,8 @@ int main(int argc, char** argv) {
 			cout << desc << endl;
 			exit(3);
 		};
+		if (vm.count("help") || argc <= 1) doHelp("");
 
-		if (vm.count("help") || vm.size() == 0) doHelp("");
 		if (vm.count("list-flaketypes")) {
 			// This may eventually be a separate file.
 			cerr << "Flake Category Listing\nId\t\tDescription\n"
@@ -80,6 +79,7 @@ int main(int argc, char** argv) {
 				"20\t\tNowell, Liu and Honeyager [2013] Rounded\n"
 				"21\t\tHoneyager, Liu and Nowell [2016] Oblate\n"
 				"22\t\tHoneyager, Liu and Nowell [2016] Prolate\n"
+				/*
 				"30\t\tOri et al. [2014] SAM model\n"
 				"40\t\tLeinonen and Szyrmer [2015] - A 0.0\n"
 				"41\t\tLeinonen and Szyrmer [2015] - A 0.1\n"
@@ -99,14 +99,17 @@ int main(int argc, char** argv) {
 				"63\t\tTyynela and Chandrasekhar [2014] - Stellar dendrite aggregates\n"
 				"70\t\tKuo et al. [2016+] - Kuo's model\n"
 				"80\t\tHogan and Westbrook [2014] - Westbrook aggregates, random orientation SSRG\n"
+				*/
 				;
 			cerr << std::endl;
 			exit(0);
 		}
+		
+		scatdb::debug::process_static_options(vm);
 
 		using namespace scatdb;
 		auto sdb = db::loadDB();
-		cerr << "Database loaded. Performing filtering." << endl;
+		//cerr << "Database loaded. Performing filtering." << endl;
 
 		auto f = filter::generate();
 
@@ -151,7 +154,7 @@ int main(int argc, char** argv) {
 
 		if (vm.count("output")) {
 			std::string fout = vm["output"].as<std::string>();
-			cerr << "Writing output to " << fout << endl;
+			//cerr << "Writing output to " << fout << endl;
 			using namespace boost::filesystem;
 			path pout(fout);
 			if (pout.extension().string() == ".hdf5") {

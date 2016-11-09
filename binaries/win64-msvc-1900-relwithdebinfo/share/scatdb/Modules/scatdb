@@ -1,0 +1,16 @@
+#%Module 1.0
+#
+#  scatdb module for use with 'environment-modules' package:
+#
+prereq			scatdb
+
+conflict		scatdb 
+prepend-path		PATH		/bin_x64_1900
+prepend-path		LD_LIBRARY_PATH	/lib_x64_1900
+prepend-path		LIBRARY_PATH	/lib_x64_1900
+prepend-path		INCLUDE		
+prepend-path		C_INCLUDE_PATH	
+prepend-path		CPLUS_INCLUDE_PATH	
+setenv			scatdb_DIR	
+setenv			scatdb_db	/scatdb.hdf5
+

@@ -77,6 +77,9 @@ configure_file (
         "${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
         )
 
+set (REL_BIN_DIR bin)
+set (REL_LIB_DIR lib)
+
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
 SET(scatdb_main
@@ -164,11 +167,6 @@ add_executable (scatdb_example_cpp
 	)
 target_link_libraries(scatdb_example_cpp ${libs} scatdb)
 addapp(scatdb_example_cpp "Examples/scatdb")
-INSTALL(TARGETS scatdb_example_cpp 
-	RUNTIME DESTINATION ${INSTALL_CMAKE_DIR}/${REL_BIN_DIR}/bin${configappend}
-	LIBRARY DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	ARCHIVE DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	COMPONENT Plugins)
 
 endif()
 
@@ -178,11 +176,6 @@ add_executable (scatdb_example_c
 	)
 target_link_libraries(scatdb_example_c ${libs} scatdb)
 addapp(scatdb_example_c "Examples/scatdb")
-INSTALL(TARGETS scatdb_example_c
-	RUNTIME DESTINATION ${INSTALL_CMAKE_DIR}/${REL_BIN_DIR}/bin${configappend}
-	LIBRARY DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	ARCHIVE DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	COMPONENT Plugins)
 ENDIF()
 #add_executable (scatdb_example_fortran
 #	apps/fortran/test-f.f90
@@ -196,20 +189,18 @@ add_executable (scatdb_envelopes apps/envelopes/envelopes.cpp)
 target_link_libraries(scatdb_envelopes ${libs} scatdb)
 addapp(scatdb_envelopes "Examples/scatdb")
 
-INSTALL(TARGETS scatdb_envelopes
-	RUNTIME DESTINATION ${INSTALL_CMAKE_DIR}/${REL_BIN_DIR}/bin${configappend}
-	LIBRARY DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	ARCHIVE DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	COMPONENT Plugins)
 ENDIF()
-#INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/data/scatdb.csv
-#	DESTINATION ${INSTALL_CMAKE_DIR}/share/scatdb
-#	COMPONENT Data
-#	)
+
 ENDIF(BUILD_APPS)
 
+INSTALL(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/data/scatdb.csv
+	${CMAKE_CURRENT_SOURCE_DIR}/data/scatdb.hdf5
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/share/scatdb
+	COMPONENT Data
+	)
 INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
-	DESTINATION ${INSTALL_CMAKE_DIR}/share/scatdb/Modules
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/share/scatdb/Modules
 	COMPONENT Data
 	)
 
