@@ -13,6 +13,7 @@ include(addapp)
 include(addlib)
 include(generaterc)
 include(GetGitRevisionDescription)
+include(addInstallDirs)
 
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
