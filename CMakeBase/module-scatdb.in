@@ -1,0 +1,16 @@
+#%Module 1.0
+#
+#  scatdb module for use with 'environment-modules' package:
+#
+prereq			scatdb
+
+conflict		scatdb 
+prepend-path		PATH		@ABS_INSTALL_BIN_DIR@/bin@configappend@
+prepend-path		LD_LIBRARY_PATH	@ABS_INSTALL_LIB_DIR@/lib@configappend@
+prepend-path		LIBRARY_PATH	@ABS_INSTALL_LIB_DIR@/lib@configappend@
+prepend-path		INCLUDE		@ABS_INSTALL_INCLUDE_DIR@
+prepend-path		C_INCLUDE_PATH	@ABS_INSTALL_INCLUDE_DIR@
+prepend-path		CPLUS_INCLUDE_PATH	@ABS_INSTALL_INCLUDE_DIR@
+setenv			scatdb_DIR	@ABS_INSTALL_CMAKE_DIR@
+setenv			scatdb_db	@ABS_INSTALL_DATA_DIST_DIR@/scatdb.hdf5
+
