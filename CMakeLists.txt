@@ -21,7 +21,7 @@ include(addapp)
 include(addlib)
 set(MAJOR 2)
 set(MINOR 0)
-set(REVISION 0)
+set(REVISION 1)
 set(SCATDB_VERSION
 	${MAJOR}.${MINOR}.${REVISION} )
 addBaseProject()
@@ -157,44 +157,6 @@ target_link_libraries(scatdb ${libs})
 addlib(scatdb SHARED)
 storebin(scatdb "Libraries")
 
-option (BUILD_APPS "Build applications" ON)
-IF (BUILD_APPS)
-	option (BUILD_EXAMPLE_CPP "Build C++ app example" ON)
-	option (BUILD_EXAMPLE_C "Build C app example" ON)
-	option (BUILD_ENVELOPES "Build envelopes app" ON)
-
-	if (BUILD_EXAMPLE_CPP)
-add_executable (scatdb_example_cpp
-	apps/cpp/test.cpp
-	)
-target_link_libraries(scatdb_example_cpp ${libs} scatdb)
-addapp(scatdb_example_cpp "Examples/scatdb")
-
-endif()
-
-if (BUILD_EXAMPLE_C)
-add_executable (scatdb_example_c
-	apps/c/test-c.c
-	)
-target_link_libraries(scatdb_example_c ${libs} scatdb)
-addapp(scatdb_example_c "Examples/scatdb")
-ENDIF()
-#add_executable (scatdb_example_fortran
-#	apps/fortran/test-f.f90
-#	)
-#set_target_properties( scatdb_example_fortran PROPERTIES LINKER_LANGUAGE Fortran)
-#target_link_libraries(scatdb_example_fortran ${libs} scatdb)
-#addapp(scatdb_example_fortran "Examples/scatdb")
-
-if (BUILD_ENVELOPES)
-add_executable (scatdb_envelopes apps/envelopes/envelopes.cpp)
-target_link_libraries(scatdb_envelopes ${libs} scatdb)
-addapp(scatdb_envelopes "Examples/scatdb")
-
-ENDIF()
-
-ENDIF(BUILD_APPS)
-
 INSTALL(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/share/scatdb.csv
 	${CMAKE_CURRENT_SOURCE_DIR}/share/scatdb.hdf5
@@ -210,3 +172,5 @@ INSTALL(DIRECTORY scatdb
 	COMPONENT Headers
 	)
 
+ADD_SUBDIRECTORY(apps)
+adddocs()
