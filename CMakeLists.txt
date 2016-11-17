@@ -13,6 +13,7 @@ include(addapp)
 include(addlib)
 include(generaterc)
 include(GetGitRevisionDescription)
+include(addInstallDirs)
 
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -24,6 +25,7 @@ set(REVISION 0)
 set(SCATDB_VERSION
 	${MAJOR}.${MINOR}.${REVISION} )
 addBaseProject()
+addInstallDirs(scatdb)
 
 addBoostUniform(filesystem program_options system iostreams date_time )
 
@@ -76,6 +78,9 @@ configure_file (
         "${CMAKE_CURRENT_SOURCE_DIR}/CMakeBase/module-scatdb.in"
         "${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
         )
+
+set (REL_BIN_DIR bin)
+set (REL_LIB_DIR lib)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
@@ -154,18 +159,26 @@ storebin(scatdb "Libraries")
 
 option (BUILD_APPS "Build applications" ON)
 IF (BUILD_APPS)
+	option (BUILD_EXAMPLE_CPP "Build C++ app example" ON)
+	option (BUILD_EXAMPLE_C "Build C app example" ON)
+	option (BUILD_ENVELOPES "Build envelopes app" ON)
+
+	if (BUILD_EXAMPLE_CPP)
 add_executable (scatdb_example_cpp
 	apps/cpp/test.cpp
 	)
 target_link_libraries(scatdb_example_cpp ${libs} scatdb)
 addapp(scatdb_example_cpp "Examples/scatdb")
 
+endif()
+
+if (BUILD_EXAMPLE_C)
 add_executable (scatdb_example_c
 	apps/c/test-c.c
 	)
 target_link_libraries(scatdb_example_c ${libs} scatdb)
 addapp(scatdb_example_c "Examples/scatdb")
-
+ENDIF()
 #add_executable (scatdb_example_fortran
 #	apps/fortran/test-f.f90
 #	)
@@ -173,26 +186,27 @@ addapp(scatdb_example_c "Examples/scatdb")
 #target_link_libraries(scatdb_example_fortran ${libs} scatdb)
 #addapp(scatdb_example_fortran "Examples/scatdb")
 
+if (BUILD_ENVELOPES)
 add_executable (scatdb_envelopes apps/envelopes/envelopes.cpp)
 target_link_libraries(scatdb_envelopes ${libs} scatdb)
 addapp(scatdb_envelopes "Examples/scatdb")
 
-INSTALL(TARGETS scatdb_example_cpp scatdb_example_c scatdb_envelopes
-#	scatdb_test_f 
-	RUNTIME DESTINATION ${INSTALL_CMAKE_DIR}/${REL_BIN_DIR}/bin${configappend}
-	LIBRARY DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	ARCHIVE DESTINATION ${INSTALL_CMAKE_DIR}/${REL_LIB_DIR}/lib${configappend}
-	COMPONENT Plugins)
+ENDIF()
 
-#INSTALL(FILES ${CMAKE_CURRENT_SOURCE_DIR}/data/scatdb.csv
-#	DESTINATION ${INSTALL_CMAKE_DIR}/share/scatdb
-#	COMPONENT Data
-#	)
 ENDIF(BUILD_APPS)
 
-INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
-	DESTINATION ${INSTALL_CMAKE_DIR}/share/scatdb/Modules
+INSTALL(FILES
+	${CMAKE_CURRENT_SOURCE_DIR}/share/scatdb.csv
+	${CMAKE_CURRENT_SOURCE_DIR}/share/scatdb.hdf5
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/share/scatdb
 	COMPONENT Data
 	)
-
+INSTALL(FILES "${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
+	DESTINATION ${CMAKE_INSTALL_PREFIX}/share/scatdb/Modules
+	COMPONENT Data
+	)
+INSTALL(DIRECTORY scatdb 
+	DESTINATION ${INSTALL_INCLUDE_DIR}
+	COMPONENT Headers
+	)
 

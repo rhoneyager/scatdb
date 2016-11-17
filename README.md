@@ -14,6 +14,9 @@ This version improves upon the initial SCATDB release in several ways.
 
 This library is tested on Debian, Fedora and Ubuntu Linux, as well as Microsoft Windows.
 
+**Windows Note:**
+The build process on Windows is rather involved (i.e. it is relatively difficult to set up the build system for first-time users). For convenience, the binaries/win64-msvc-1900-relwithdebinfo subdirectory contains a prebuilt version of the C++ example application and associated library. It was built with Microsoft Visual Studio 2015. Because of how Microsoft packages its C++ libraries on Windows, it might be necessary to first install the C++ runtime for Windows, [available from here](https://www.microsoft.com/en-us/download/details.aspx?id=48145).
+
 Requirements:
 --------------
 
@@ -59,28 +62,47 @@ sudo make install
 
 ## Using
 
-Example programs are in the apps/ subdirectory. SCATDB is primarily written in C++, though it has an extensive C interface. Fortran programs may link to the library using the C interface. C++ header files are denoted with the .hpp extension, and C-only headers use .h.
 
-Example program syntax:
+For most users, the scatdb_example_cpp program is a good place to start. This program reads the database and performs subsetting based on user-provided input. For example, you can filter and write out all data around 13.6 GHz at around 263 K for only aggregate snowflakes with the following command:
 ```
-scatdb_example_cpp -y 5,6,7,8 -f 13/14 -T 259/265 -m 3/4 --stats
+scatdb_example_cpp -y 20,21,22 -f 13/14 -T 259/265 -o filtered_1.csv
 ```
 
-The applications all should automatically detect the location of the scattering database. By default, it is located in **'scatdb.hdf5'**, and contains tables for cross sections and phase functions. If the database is not found, then it can be specified by setting the **'scatdb_db'** environment variable, or by specifying the **'-d {dbfile}'** option at the command prompt.
 
-The scatdb_example_cpp application provides several options for reading and subsetting the database. You can subset by frequency, temperature, ice solid sphere-equivalent effective radius, maximum dimension, aspect ratio, and snowflake classification. These options all read a string, and the string can be a comma-separated list (e.g. for flake types, **'-y 5,6,7,8'** to select small bullet rosettes only) or can be expressed in a range notation (e.g. for frequencies between 13 and 14 GHz: **'-f 13/14'**). **Because floating-point values are not exact, frequencies and temperatures should always be expressed in range notation to the nearest GHz or degree K**
+
+
+Other example programs are in the apps/ subdirectory. SCATDB is primarily written in C++, though it has an extensive C interface. Fortran programs may link to the library using the C interface. C++ header files are denoted with the .hpp extension, and C-only headers use .h.
+
+The applications all should automatically detect the location of the scattering database. By default, it is located in *'scatdb.hdf5'*, and contains tables for cross sections and phase functions. If the database is not found, then it can be specified by setting the *'scatdb_db'* environment variable, or by specifying the *'-d {dbfile}'* option at the command prompt.
+
+The scatdb_example_cpp application provides several options for reading and subsetting the database. You can subset by frequency, temperature, ice solid sphere-equivalent effective radius, maximum dimension, aspect ratio, and snowflake classification. These options all read a string, and the string can be a comma-separated list (e.g. for flake types, *'-y 5,6,7,8'* to select small bullet rosettes only) or can be expressed in a range notation (e.g. for frequencies between 13 and 14 GHz: *'-f 13/14'*). **Because floating-point values are not exact, frequencies and temperatures should always be expressed in range notation to the nearest GHz or degree K**
 
 The selected data can be re-saved at another location, by specifying an output file. HDF5 files are detected by specifying a .hdf5 extension. This file format is recommended because it preserves the phase functions of the particles. Comma-separated-value files can also be written by specifying a .csv extension. These files can export either only 1) the overall single scattering properties or 2) the phase function for a single database record. To re-use the selected data, you can tell the program to load the saved hdf5 file with the -d option.
 
-Once a selection is made, it is possible to calculate the statistics with the --stats option. By combining this option with filtering, it is possible to calculate binned quantites. An example application is binning over particle size bins produced by another instrument. This way, it is possible to efficiently calculate effective radar reflectivity for different PSDs and for different particle populations.
+Once a selection is made, it is possible to calculate the statistics with the *'--stats'* option. By combining this option with filtering, it is possible to calculate binned quantites. An example application is binning over particle size bins produced by another instrument. This way, it is possible to efficiently calculate effective radar reflectivity for different PSDs and for different particle populations.
 
-## State of the database
 
-The package supersedes Guosheng Liu's original scatdb release, as well as Holly Nowell's scatdb_ag database.
+Output Files and Units
+---------------
+CSV output files look like this:
+```
+flaketype,frequencyghz,temperaturek,aeffum,max_dimension_mm,cabs,cbk,cext,csca,g,ar
+0,3.000000,273.149994,25.000000,0.120900,8.708887e-16,1.059305e-20,8.708959e-16,7.220166e-21,1.782000e-04,-1.000000
+0,3.000000,273.149994,50.000000,0.241700,6.967110e-15,6.779529e-19,6.967572e-15,4.620890e-19,1.794500e-04,-1.000000
+```
 
-Flake categories are listed below:
-- Ids 0-10 are for the pristine snowflakes of Liu (2004) and Liu (2008). There are data for 233, 243, 253, 263 and 273 K. Numerous frequencies have been included (3, 5, 9, 10, 13.4, 15, 19, 24.1, 35.6, 50, 60, 70, 80, 85.5, 90, 94, 118, 150, 166, 183, 220 and 340 GHz).
-- Ids 20-22 are for bullet rosette aggregates, described in Nowell, Liu and Honeyager (2013) and Honeyager, Liu and Nowell (2016). Over one thousand aggregates are included. We currently have results only for 263 K, but extrapolation is possible by examining the behavior of the Liu (2004,2008) particles over the appropriate ranges. Ten frequencies are currently available (10.65, 13.6, 18.7, 23.8, 35.6, 36.5, 89, 94, 165.5 and 183.31 GHz).
+The columns are:
+- flaketype - an integer that describes the type on snowflake (see below for a listing)
+- frequencyghz - The frequency, in GHz.
+- temperaturek - The temperature, in Kelvin
+- aeffum - The radius of an equal-mass solid sphere of ice, expressed in micrometers.
+- max_dimension_mm - The furthest distance in three dimensions between any two points on the ice particle. Units are millimeters.
+- cabs - Absorption cross section (m^2)
+- cbk - Backscatter cross section (m^2)
+- cext - Extinction cross section (m^2)
+- csca - Scattering cross section (m^2)
+- g - Asymmetry parameter (dimensionless)
+- ar - Aspect ratio (definition is a work in progress)
 
 Flake Category Listing
 -------
@@ -102,6 +124,17 @@ Flake Category Listing
 | 21 | Honeyager, Liu and Nowell (2016) | Oblate aggregates with ar near 0.6 |
 | 22 | Honeyager, Liu and Nowell (2016) | Prolate aggregates with ar near 0.6 |
 
+
+## State of the database
+
+The package supersedes Guosheng Liu's original scatdb release, as well as Holly Nowell's scatdb_ag database.
+
+Flake categories are listed above.
+- Ids 0-10 are for the pristine snowflakes of Liu (2004) and Liu (2008). There are data for 233, 243, 253, 263 and 273 K. Numerous frequencies have been included (3, 5, 9, 10, 13.4, 15, 19, 24.1, 35.6, 50, 60, 70, 80, 85.5, 90, 94, 118, 150, 166, 183, 220 and 340 GHz).
+- Ids 20-22 are for bullet rosette aggregates, described in Nowell, Liu and Honeyager (2013) and Honeyager, Liu and Nowell (2016). Over one thousand aggregates are included. We currently have results only for 263 K, but extrapolation is possible by examining the behavior of the Liu (2004,2008) particles over the appropriate ranges. Ten frequencies are currently available (10.65, 13.6, 18.7, 23.8, 35.6, 36.5, 89, 94, 165.5 and 183.31 GHz).
+
+All calculations were performed using [DDSCAT](http://www.ddscat.org/) versions 7.0-7.3. All dielectric indices are calculated using [Mätzler \(2006\)](http://www.atmos.washington.edu/ice_optical_constants/Matzler.pdf). Random particle orientations are presented in this database. This is achieved by averaging over thousands of possible orientations. The per-orientation and polarimetric data are retained for radar frequencies. This data may be obtained by contacting the authors directly.
+
 Papers
 ---------
 
@@ -115,18 +148,17 @@ Papers
 
 ## Work in progress / planned work
 
-- Still working on implementing phase function tables in the code.
-- Currently re-assimilating the data.
-- Adding 220 GHz aggregate snowflake results.
-- More work on the C interface is underway. An improved Fortran code is anticipated.
-- Support for interpolation / extrapolation.
+- Implementing phase function tables in the code
+- Adding 220 GHz aggregate snowflake results
+- More work on the C interface is underway. An improved Fortran code is also anticipated.
+- Support for interpolation / extrapolation
 - Support for sorting
-- Support for estimating mean scattering behavior using the Locally-Weighted Scatterplot Smoothing (LOWESS) algorithm.
-- Debian / Ubuntu / Fedora / Windows binary packages
+- Support for estimating mean scattering behavior using the Locally-Weighted Scatterplot Smoothing (LOWESS) algorithm
+- Debian / Ubuntu / Fedora / Windows binary installable packages
 
 ## License
 
-The scattering database and the associated code are released under the MIT License.
+The scattering database and the associated code are released under the [MIT License](https://opensource.org/licenses/MIT).
 
 ## Credits
 
@@ -139,5 +171,5 @@ The original scatdb and scatdb_ag databases are available [here](http://cirrus.m
 
 ## Problems / Suggestions / Contributions
 
-Contact Ryan Honeyager <rhoneyager@fsu.edu> or Guosheng Liu <gliu@fsu.edu>.
+Contact Ryan Honeyager \(<rhoneyager@fsu.edu>\) or Guosheng Liu \(<gliu@fsu.edu>\).
 

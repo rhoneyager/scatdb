@@ -13,9 +13,9 @@ enum data_entries_floats {
 };
 enum data_entries_ints {
 	SDBR_FLAKETYPE,
-	SDBR_SHAPE_ID,
-	SDBR_RUN_ID,
-	SDBR_PFTABLE_ID,
+	//SDBR_SHAPE_ID,
+	//SDBR_RUN_ID,
+	//SDBR_PFTABLE_ID,
 	SDBR_NUM_DATA_ENTRIES_INTS
 };
 enum data_entries_stats_fields {
