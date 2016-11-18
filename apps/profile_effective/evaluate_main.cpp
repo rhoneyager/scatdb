@@ -17,7 +17,7 @@
 #include "../../scatdb/units/units.hpp"
 #include "../../scatdb/refract.hpp"
 #include "../../scatdb/scatdb.hpp"
-#include "../../scatdb/export-hdf5.h"
+#include "../../scatdb/export-hdf5.hpp"
 #include <hdf5.h>
 #include <H5Cpp.h>
 
@@ -61,18 +61,18 @@ int main(int argc, char** argv) {
 		string profname;
 		if (vm.count("profiles")) profname = vm["profiles"].as<string>();
 		else doHelp("Must specify profile path");
-		auto allprofiles = Andy::forward_conc_table::readHDF5File(profname.c_str());
+		auto allprofiles = scatdb::profiles::forward_conc_table::readHDF5File(profname.c_str());
 
 		// Read the scattering database
-		using namespace scatdb_ryan;
+		using namespace scatdb;
 		string sdbname;
 		if (vm.count("scatdb")) sdbname = vm["scatdb"].as<string>();
 		else db::findDB(sdbname);
 		auto sdb = db::loadDB(sdbname.c_str());
 		auto f = filter::generate();
 		// Only use rosettes and rosette aggregates
-		f->addFilterInt(db::data_entries::FLAKETYPE, "5/8,20");
-		auto db_ros = f->apply(sdb);
+		f->addFilterInt(db::data_entries::SDBR_FLAKETYPE, "5/8,20");
+		auto db_filttype = f->apply(sdb);
 
 		vector<pair<string, string> > freqranges;
 		freqranges.push_back(pair<string, string>("Ku", "13/14"));
@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 		string sout;
 		if (vm.count("output")) sout = vm["output"].as<string>();
 		else doHelp("Need to specify an output file");
-		scatdb::plugins::hdf5::useZLIB(true);
+		//scatdb::plugins::hdf5::useZLIB(true);
 		using namespace H5;
 		//Exception::dontPrint();
 		std::shared_ptr<H5::H5File> file;
@@ -90,32 +90,32 @@ int main(int argc, char** argv) {
 			file = std::shared_ptr<H5File>(new H5File(sout, H5F_ACC_TRUNC));
 		else
 			file = std::shared_ptr<H5File>(new H5File(sout, H5F_ACC_TRUNC));
-		auto base = scatdb::plugins::hdf5::openOrCreateGroup(file, "andy_output");
+		auto base = scatdb::plugins::hdf5::openOrCreateGroup(file, "profile_output");
 		auto fsbase = scatdb::plugins::hdf5::openOrCreateGroup(base, "scatdb_initial");
-		sdb->writeHDF5File(fsbase);
-		auto fsros = scatdb::plugins::hdf5::openOrCreateGroup(base, "scatdb_rosettes");
-		db_ros->writeHDF5File(fsros);
+		sdb->writeHDFfile(fsbase);
+		auto fsfilt = scatdb::plugins::hdf5::openOrCreateGroup(base, "scatdb_filtered_type");
+		db_filttype->writeHDFfile(fsfilt);
 
 		// Iterate over each profile and each set of frequencies
 		for (const auto &freq : freqranges) {
 			auto ff = filter::generate();
-			ff->addFilterFloat(db::data_entries::FREQUENCY_GHZ, freq.second);
-			ff->addFilterFloat(db::data_entries::TEMPERATURE_K, "262/264");
-			auto db_ros_f = ff->apply(db_ros);
-			auto db_ros_f_sorted = db_ros_f; // db_ros_f->sort(db::data_entries::MAX_DIMENSION_MM);
+			ff->addFilterFloat(db::data_entries::SDBR_FREQUENCY_GHZ, freq.second);
+			ff->addFilterFloat(db::data_entries::SDBR_TEMPERATURE_K, "262/264");
+			auto db_filttype_f = ff->apply(db_filttype);
+			auto db_filttype_f_sorted = db_filttype_f; // db_filttype_f->sort(db::data_entries::MAX_DIMENSION_MM);
 
 			auto fgrp = scatdb::plugins::hdf5::openOrCreateGroup(base, freq.first.c_str());
 			auto fshpun = scatdb::plugins::hdf5::openOrCreateGroup(fgrp, "freq_temp_scatdb_unsorted");
-			db_ros_f->writeHDF5File(fshpun);
+			db_filttype_f->writeHDFfile(fshpun);
 			//auto fshp = scatdb::plugins::hdf5::openOrCreateGroup(fgrp, "freq_temp_scatdb_sorted");
-			//db_ros_f_sorted->writeHDF5File(fshp);
+			//db_filttype_f_sorted->writeHDFfile(fshp);
 
-			auto db_ros_f_sorted_stats = db_ros_f_sorted->getStats();
-			auto o_db_ros_f_sorted_stats = scatdb::plugins::hdf5::openOrCreateGroup(fgrp, "Stats");
-			db_ros_f_sorted_stats->writeHDF5File(o_db_ros_f_sorted_stats);
+			auto db_filttype_f_sorted_stats = db_filttype_f_sorted->getStats();
+			auto o_db_filttype_f_sorted_stats = scatdb::plugins::hdf5::openOrCreateGroup(fgrp, "Stats");
+			db_filttype_f_sorted_stats->writeHDF5File(o_db_filttype_f_sorted_stats);
 
 			// Get frequency
-			float freq_ghz = db_ros_f_sorted_stats->floatStats(db::data_entries::MEDIAN, db::data_entries::FREQUENCY_GHZ);
+			float freq_ghz = db_filttype_f_sorted_stats->floatStats(db::data_entries::SDBR_MEDIAN, db::data_entries::SDBR_FREQUENCY_GHZ);
 			// Get wavelength
 			auto specConv_m = scatdb::units::conv_spec::generate("GHz", "m");
 			float wvlen_m = (float)specConv_m->convert(freq_ghz);
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
 			float wvlen_um = wvlen_m * 1000 * 1000;
 			const float pi = 3.14159265358979f;
 
-			float tIce = db_ros_f_sorted_stats->floatStats(db::data_entries::MEDIAN, db::data_entries::TEMPERATURE_K);
+			float tIce = db_filttype_f_sorted_stats->floatStats(db::data_entries::SDBR_MEDIAN, db::data_entries::SDBR_TEMPERATURE_K);
 			scatdb::plugins::hdf5::addAttr<float>(fgrp, "temp_ice_k", tIce);
 			float tWater = 273.15f;
 			scatdb::plugins::hdf5::addAttr<float>(fgrp, "temp_water_k", tWater);
@@ -164,13 +164,13 @@ int main(int argc, char** argv) {
 					}
 					auto obin = scatdb::plugins::hdf5::openOrCreateGroup(fpartials, strbin.c_str());
 					auto fbin = filter::generate();
-					float binMin = (*data)(row, Andy::defs::BIN_LOWER) / 1000.f; // mm
-					float binMax = (*data)(row, Andy::defs::BIN_UPPER) / 1000.f; // mm
-					float binMid = (*data)(row, Andy::defs::BIN_MID) / 1000.f; // mm
+					float binMin = (*data)(row, scatdb::profiles::defs::BIN_LOWER) / 1000.f; // mm
+					float binMax = (*data)(row, scatdb::profiles::defs::BIN_UPPER) / 1000.f; // mm
+					float binMid = (*data)(row, scatdb::profiles::defs::BIN_MID) / 1000.f; // mm
 					float binWidth = binMax - binMin;
-					float binConc = (*data)(row, Andy::defs::CONCENTRATION); // m^-4
-					fbin->addFilterFloat(db::data_entries::MAX_DIMENSION_MM, binMin, binMax);
-					auto dbin = fbin->apply(db_ros_f_sorted);
+					float binConc = (*data)(row, scatdb::profiles::defs::CONCENTRATION); // m^-4
+					fbin->addFilterFloat(db::data_entries::SDBR_MAX_DIMENSION_MM, binMin, binMax);
+					auto dbin = fbin->apply(db_filttype_f_sorted);
 					binned_raw.push_back(dbin);
 					auto sbin = dbin->getStats();
 					binned_stats.push_back(sbin);
@@ -181,12 +181,12 @@ int main(int argc, char** argv) {
 					scatdb::plugins::hdf5::addAttr<float>(obin, "bin_mid_mm", binMid);
 					scatdb::plugins::hdf5::addAttr<float>(obin, "bin_width_mm", binWidth);
 					scatdb::plugins::hdf5::addAttr<float>(obin, "bin_conc_m^-4", binConc);
-					float medCbk = sbin->floatStats(db::data_entries::MEDIAN, db::data_entries::CBK_M);
+					float medCbk = sbin->floatStats(db::data_entries::SDBR_MEDIAN, db::data_entries::SDBR_CBK_M);
 					// Calculate midpoint's size parameter
 					float sizep_md = 2.f * pi * binMid * 1000 / wvlen_um;
 					scatdb::plugins::hdf5::addAttr<float>(obin, "size_parameter_md", sizep_md);
 					if (sbin->count) {
-						dbin->writeHDF5File(odbin);
+						dbin->writeHDFfile(odbin);
 						sbin->writeHDF5File(osbin);
 					} else {
 						scatdb::plugins::hdf5::addAttr<int>(obin, "Empty", 1);
@@ -219,9 +219,9 @@ int main(int argc, char** argv) {
 				std::complex<double> mIce, mWater;
 				auto provIce = scatdb::refract::findProvider("ice", true, true);
 				auto provWater = scatdb::refract::findProvider("water", true, true);
-				if (!provIce) RSthrow(scatdb::error::error_types::xBadFunctionReturn)
+				if (!provIce) SDBR_throw(scatdb::error::error_types::xBadFunctionReturn)
 					.add<std::string>("Reason", "provIce is null");
-				if (!provWater) RSthrow(scatdb::error::error_types::xBadFunctionReturn)
+				if (!provWater) SDBR_throw(scatdb::error::error_types::xBadFunctionReturn)
 					.add<std::string>("Reason", "provIce is null");
 				scatdb::refract::refractFunction_freq_temp_t r_ice, r_water;
 				scatdb::refract::prepRefract(provIce, "GHz", "K", r_ice);
