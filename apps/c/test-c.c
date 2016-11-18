@@ -81,7 +81,7 @@ int main(int argc, char** argv) {
 	for (int j=0; j<SDBR_NUM_DATA_ENTRIES_FLOATS; ++j) {
 		printf("%s", SDBR_stringifyFloatsColumn(j));
 		for (int i=0; i<SDBR_NUM_DATA_ENTRIES_STATS; ++i) {
-			printf("\t%f", summaryTable[k]);
+			printf("\t%e", summaryTable[k]);
 			++k;
 		}
 		printf("\n");
