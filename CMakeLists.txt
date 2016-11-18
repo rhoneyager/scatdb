@@ -83,6 +83,14 @@ set (REL_BIN_DIR bin)
 set (REL_LIB_DIR lib)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+SET(scatdb_os
+	src/os_functions_common.cpp
+	private/os_functions_common.hpp
+	src/os_functions_linux.cpp
+	private/os_functions_linux.hpp
+	src/os_functions_win.cpp
+	private/os_functions_win.hpp
+	)
 SET(scatdb_debug
 	src/debug.cpp
 	scatdb/debug.hpp
@@ -102,12 +110,6 @@ SET(scatdb_debug
 	src/options.cpp
 	private/options.hpp
 	scatdb/optionsForwards.hpp
-	src/os_functions_common.cpp
-	private/os_functions_common.hpp
-	src/os_functions_linux.cpp
-	private/os_functions_linux.hpp
-	src/os_functions_win.cpp
-	private/os_functions_win.hpp
 	src/splitSet.cpp
 	scatdb/splitSet.hpp
 	src/versioning.cpp
@@ -123,6 +125,7 @@ SET(scatdb_main
 	scatdb/scatdb.h
 	scatdb/scatdb.hpp
 	scatdb/scatdb_liu.h
+	scatdb/zeros.hpp
 	src/scatdb.cpp
 	src/scatdb_c.cpp
 	src/scatdb_stats.cpp
@@ -133,12 +136,43 @@ SET(scatdb_main
 	src/io_simple.cpp
 	src/scatdb_liu.c
 	src/scatdb_liu_supplemental.cpp
+	src/zeros.cpp
 	)
+set(scatdb_shape
+	src/shape.cpp
+	src/shapeIOtext.cpp
+	src/shapeIOtextParses.cpp
+	scatdb/shape/shape.hpp
+	scatdb/shape/shapeAlgs.hpp
+	scatdb/shape/shapeForwards.hpp
+	private/shapeBackend.hpp
+	private/shapeIOtext.hpp
+	)
+set(scatdb_refract
+	scatdb/refract/refract.hpp
+	scatdb/refract/refractBase.hpp
+	src/refract.cpp
+	src/refractImpl.cpp
+	src/refractStore.cpp
+	private/refractBackend.hpp
+	)
+SET(scatdb_units
+	src/units.cpp
+	src/unitsSimple.cpp
+	scatdb/units/units.hpp
+	scatdb/units/unitsPlugins.hpp
+	private/unitsBackend.hpp
+	)
+SOURCE_GROUP("OS" FILES ${scatdb_os})
 SOURCE_GROUP("Debug" FILES ${scatdb_debug})
 source_group("Main" FILES ${scatdb_main})
+source_group("Shape" FILES ${scatdb_shape})
+source_group("Refract" FILES ${scatdb_refract})
+source_group("Units" FILES ${scatdb_units})
 set( scatdb_srcs
 	${scatdb_main}
 	${scatdb_debug}
+	${scatdb_os}
 	"${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake-settings.h"
    )
