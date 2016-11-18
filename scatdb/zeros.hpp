@@ -6,11 +6,11 @@
 
 #include "error.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 
 	namespace zeros {
 		/// Zero-finding implementation - Brent's method
-		Ryan_Scat_DL double findzero(double a, double b, const std::function<double(double) > & evaltarget);
+		DLEXPORT_SDBR double findzero(double a, double b, const std::function<double(double) > & evaltarget);
 
 		// f is an arbitrary class with operator(). So, a functional / lambda function does work.
 		template<class T, class U>
@@ -35,7 +35,7 @@ namespace Ryan_Scat {
 				xn = xn1 - fxn1 * (xn1 - xn2) / (fxn1 - fxn2);
 			} while ( (abs(xn-xn1) > eps) && (i++ < maxIter));
 
-			if (i >= maxIter) RSthrow(Ryan_Scat::error::error_types::xModelOutOfRange)
+			if (i >= maxIter) SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 				.add<size_t>("maxIter", maxIter)
 				.add<double>("eps", eps)
 				.add<U>("guess_a", guess_a)

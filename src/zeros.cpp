@@ -1,7 +1,7 @@
-#include "../Ryan_Scat/zeros.hpp"
+#include "../scatdb/zeros.hpp"
 #include <cmath>
 
-namespace Ryan_Scat {
+namespace scatdb {
 
 	namespace zeros {
 		double findzero(double a, double b, const std::function<double(double) > &f )
@@ -23,7 +23,7 @@ namespace Ryan_Scat {
 
 			// Bad starting points if fa*fb > 0
 			if (fa*fb > 0) 
-				RSthrow(Ryan_Scat::error::error_types::xBadInput)
+				SDBR_throw(scatdb::error::error_types::xBadInput)
 					.add<std::string>("Reason",
 						"Bad selection of a,b. f(a) and f(b) need to have opposite signs.")
 				.add<double>("a",a).add<double>("b",b)
