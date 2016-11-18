@@ -22,6 +22,12 @@ namespace scatdb {
 			std::string environment;
 			/// Command-line
 			std::string cmdline;
+			/// Command line number of arguments
+			//int argc;
+			/// Command line argument buffer
+			//const char **argv;
+			/// Command line argument buffer backend
+			std::vector<std::string> argv_v;
 			/// Process start time
 			std::string startTime;
 			/// Process ID

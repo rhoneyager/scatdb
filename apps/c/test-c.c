@@ -4,10 +4,12 @@
 #include "../../scatdb/scatdb.h"
 
 void printError() {
-	const int buflen = 1024;
-	char buffer[buflen];
-	SDBR_err_msg(buflen, buffer);
+#define BUFLEN 1024
+	//const int buflen = 1024;
+	char buffer[BUFLEN];
+	SDBR_err_msg(BUFLEN, buffer);
 	printf("Error message:\n%s", buffer);
+#undef BUFLEN
 }
 
 int main(int argc, char** argv) {
@@ -35,8 +37,8 @@ int main(int argc, char** argv) {
 	}
 
 	// Count the number of lines in the database
-	int numEntries = SDBR_getNumRows(hdb);
-	printf("The database has %d rows.\n", numEntries);
+	uint64_t numEntries = SDBR_getNumRows(hdb);
+	printf("The database has %lld rows.\n", numEntries);
 /*
 	// Filter the database based on flake type
 	const char* fts = "3,4,5,6,20";

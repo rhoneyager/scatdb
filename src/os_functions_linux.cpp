@@ -239,6 +239,7 @@ namespace scatdb{
 					{
 						scmdline.read(buffer, length);
 						res->cmdline.append(buffer, scmdline.gcount());
+						res->argv_v.push_back(std::string(buffer));
 					}
 					//scmdline >> res->cmdline;
 					// Replace command-line null symbols with spaces

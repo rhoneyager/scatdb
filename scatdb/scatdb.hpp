@@ -15,11 +15,7 @@ namespace scatdb {
 	class DLEXPORT_SDBR scatdb_base { public: scatdb_base(); virtual ~scatdb_base(); };
 	class filter;
 	class filterImpl;
-	enum class write_type {
-		SDBR_TRUNCATE,
-		SDBR_READWRITE,
-		SDBR_CREATE
-	};
+	
 	class DLEXPORT_SDBR db : public scatdb_base {
 		friend class filter;
 		friend class filterImpl;
@@ -34,7 +30,7 @@ namespace scatdb {
 		void print(std::ostream &out) const;
 		void writeTextFile(const char* filename) const;
 		void writeHDFfile(const char* filename,
-			write_type, const char* hdfinternalpath = nullptr) const;
+			SDBR_write_type, const char* hdfinternalpath = nullptr) const;
 		void writeHDFfile(std::shared_ptr<H5::Group>) const;
 
 		// The data in the database, in tabular form

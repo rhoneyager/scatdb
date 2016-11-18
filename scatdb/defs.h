@@ -115,7 +115,11 @@
 
 #endif
 
-
+enum SDBR_write_type {
+	SDBR_TRUNCATE,
+	SDBR_READWRITE,
+	SDBR_CREATE
+};
 
 // End the header block
 #endif

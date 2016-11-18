@@ -83,16 +83,13 @@ set (REL_BIN_DIR bin)
 set (REL_LIB_DIR lib)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-
-SET(scatdb_main
+SET(scatdb_debug
 	src/debug.cpp
 	scatdb/debug.hpp
 	src/error.cpp
 	scatdb/error.hpp
 	src/errorTypes.cpp
 	scatdb/errorTypes.hpp
-	src/export-hdf5.cpp
-	scatdb/export-hdf5.hpp
 	src/hash.cpp
 	private/hash.hpp
 	private/hashForwards.hpp
@@ -116,6 +113,10 @@ SET(scatdb_main
 	src/versioning.cpp
 	private/versioning.hpp
 	private/versioningForwards.hpp
+	)
+SET(scatdb_main
+	src/export-hdf5.cpp
+	scatdb/export-hdf5.hpp
 	scatdb/defs.h
 	scatdb/defs.hpp
 	scatdb/lowess.hpp
@@ -133,9 +134,11 @@ SET(scatdb_main
 	src/scatdb_liu.c
 	src/scatdb_liu_supplemental.cpp
 	)
+SOURCE_GROUP("Debug" FILES ${scatdb_debug})
 source_group("Main" FILES ${scatdb_main})
 set( scatdb_srcs
 	${scatdb_main}
+	${scatdb_debug}
 	"${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake-settings.h"
    )

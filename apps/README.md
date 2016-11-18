@@ -49,7 +49,6 @@ dielectric formulas are currently implemented.
 - The [scatdb_units](./units) application provides an interface for unit
 conversions. scatdb can convert between different temperature, length, mass
 and density units. It can also perform spectral conversions \(i.e. frequency \[GHz\]
-to wavelength \[millimeters\]\). When the library is built with udunits support,
-then it can provide conversions between any units.
+to wavelength \[millimeters\]\).
 
 

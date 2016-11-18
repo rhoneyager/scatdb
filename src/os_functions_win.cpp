@@ -38,7 +38,23 @@ namespace scatdb {
 			}
 
 			using namespace ::scatdb::debug::vars;
+			/*
+			std::string convertStr(const LPWSTR instr)
+			{
+				size_t origsize = wcslen(instr) + 1;
 
+				const size_t newsize = origsize * 4;
+				size_t convertedChars = 0;
+
+				boost::shared_array<char> nstring(new char[newsize]);
+				//char nstring[newsize];
+				wcstombs_s(&convertedChars, nstring.get(), origsize, instr, _TRUNCATE);
+				// Destination string was always null-terminated!
+				std::string res(nstring.get());
+
+				return std::move(res);
+			}
+			*/
 			std::string convertStr(const LPTSTR instr)
 			{
 
@@ -479,6 +495,17 @@ namespace scatdb {
 					FreeEnvironmentStrings(penv);
 
 					res->cmdline = std::string(GetCommandLine());
+					
+					int nArgs;
+					LPWSTR *szArglist;
+					szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+					if (szArglist) {
+						for (int i = 0; i < nArgs; ++i) {
+							std::string sarg = win::convertStr(szArglist[i]);
+							res->argv_v.push_back(sarg);
+						}
+						LocalFree(szArglist);
+					}
 
 					DWORD sz = GetCurrentDirectory(0, NULL);
 					LPTSTR cd = new TCHAR[sz];

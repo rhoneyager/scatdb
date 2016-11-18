@@ -30,6 +30,10 @@ extern "C" {
 	/// Execute library load tasks
 	bool DLEXPORT_SDBR SDBR_start(int argc, char** argv);
 
+	/// Execute library load tasks. 
+	/// Use system calls to directly get the command line. Use with Fortran.
+	bool DLEXPORT_SDBR SDBR_start_alt();
+
 	/** \brief Load the database
 	 * \param dbfile is a null-terminated string that overrides
 	 * the path to the file. If NULL, then
@@ -52,14 +56,14 @@ extern "C" {
 	/// \param outfile is the null-terminated output filename
 	/// \returns indicates success of operation. See error code if return is false.
 	bool DLEXPORT_SDBR SDBR_writeDBtext(SDBR_HANDLE handle, const char* outfile);
-	//bool DLEXPORT_SDBR SDBR_writeDBHDF5(SDBR_HANDLE handle, const char* outfile);
-	//bool DLEXPORT_SDBR SDBR_writeDBHDF5path(SDBR_HANDLE handle, const char* outfile, const char* hdfinternalpath);
-
+	bool DLEXPORT_SDBR SDBR_writeDBHDF(SDBR_HANDLE handle,
+		const char* outfile, enum SDBR_write_type wt, const char* hdfpath);
+	
 	/// Get number of entries in database
 	uint64_t DLEXPORT_SDBR SDBR_getNumRows(SDBR_HANDLE handle);
 
 	/// Get the memory requirements to copy the database float table.
-	void DLEXPORT_SDBR SDBR_getFloatTableSize(SDBR_HANDLE db, uint64_t *numFloats, uint64_t *numBytes);
+	bool DLEXPORT_SDBR SDBR_getFloatTableSize(SDBR_HANDLE db, uint64_t *numFloats, uint64_t *numBytes);
 
 	/// Get the database float table.
 	/// \param db is the pointer to the loaded database.
@@ -71,7 +75,7 @@ extern "C" {
 	bool DLEXPORT_SDBR SDBR_getFloatTable(SDBR_HANDLE db, float* p, uint64_t maxsize); 
 
 	/// Get the memory requirements to copy the database int table
-	void DLEXPORT_SDBR SDBR_getIntTableSize(SDBR_HANDLE db, uint64_t *numInts, uint64_t *numBytes);
+	bool DLEXPORT_SDBR SDBR_getIntTableSize(SDBR_HANDLE db, uint64_t *numInts, uint64_t *numBytes);
 
 	/// Get the database integer table.
 	/// Same options as for the float table.
@@ -101,7 +105,7 @@ extern "C" {
 	/// This is a convenience function to help with memory allocations.
 	/// \param numFloats is the number of floats that must be allocated (pointer).
 	/// \param bytes is the size of the array, in bytes (pointer).
-	void DLEXPORT_SDBR SDBR_getStatsTableSize(uint64_t *numFloats, uint64_t *bytes);
+	bool DLEXPORT_SDBR SDBR_getStatsTableSize(uint64_t *numFloats, uint64_t *bytes);
 
 	/// Get the size of the given phase function table
 

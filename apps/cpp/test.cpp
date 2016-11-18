@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
 			path pout(fout);
 			if (pout.extension().string() == ".hdf5") {
 				interp_filtered->writeHDFfile(fout.c_str(),
-					scatdb::write_type::SDBR_TRUNCATE);
+					SDBR_write_type::SDBR_TRUNCATE);
 			} else {
 				interp_filtered->writeTextFile(fout.c_str());
 			}
