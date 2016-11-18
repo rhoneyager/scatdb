@@ -351,6 +351,136 @@ extern "C" {
 		return res;
 	}
 
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterFloatByString(
+		SDBR_HANDLE handle, data_entries_floats col_id, const char* strFilter)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			
+			auto f = filter::generate();
+			std::string sstrfilter(strFilter);
+			//f->addFilterInt(db::data_entries::SDBR_FLAKETYPE, vm["flaketypes"].as<string>());
+			f->addFilterFloat((db::data_entries::data_entries_floats) col_id, sstrfilter);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+	
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterFloatByRange(
+		SDBR_HANDLE handle, data_entries_floats col_id, float minVal, float maxVal)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+
+			auto f = filter::generate();
+			//f->addFilterInt(db::data_entries::SDBR_FLAKETYPE, vm["flaketypes"].as<string>());
+			f->addFilterFloat((db::data_entries::data_entries_floats) col_id, minVal, maxVal);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterIntByString(
+		SDBR_HANDLE handle, data_entries_ints col_id, const char* strFilter)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+
+			auto f = filter::generate();
+			std::string sstrfilter(strFilter);
+			f->addFilterInt((db::data_entries::data_entries_ints) col_id, sstrfilter);
+			//f->addFilterFloat((db::data_entries::data_entries_floats) col_id, sstrfilter);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterIntByRange(
+		SDBR_HANDLE handle, data_entries_ints col_id, uint64_t minVal, uint64_t maxVal)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+
+			auto f = filter::generate();
+			f->addFilterInt((db::data_entries::data_entries_ints) col_id, minVal, maxVal);
+			//f->addFilterFloat((db::data_entries::data_entries_floats) col_id, minVal, maxVal);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyStatsColumn(uint64_t val) {
+		return scatdb::db::data_entries::stringifyStats(val);
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyFlakeId(uint64_t val) {
+		return scatdb::db::data_entries::getCategoryDescription(val);
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyFloatsColumn(uint64_t val) {
+		return scatdb::db::data_entries::stringify<float>(val);
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyIntsColumn(uint64_t val) {
+		return scatdb::db::data_entries::stringify<int>(val);
+	}
+
 }
 
 

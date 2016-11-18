@@ -106,6 +106,7 @@ namespace scatdb {
 		void addSortInt(db::data_entries::data_entries_ints param, sortDir);
 
 		std::shared_ptr<const db> apply(std::shared_ptr<const db>) const;
+		std::shared_ptr<const db> apply(const db*) const;
 	};
 }
 

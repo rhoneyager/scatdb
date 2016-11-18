@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 	// Count the number of lines in the database
 	uint64_t numEntries = SDBR_getNumRows(hdb);
 	printf("The database has %lld rows.\n", numEntries);
-/*
+
 	// Filter the database based on flake type
 	const char* fts = "3,4,5,6,20";
 	hdbFiltA = SDBR_filterIntByString(hdb, SDBR_FLAKETYPE, fts);
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
 		goto freeObjs;
 	}
 	// Filter the database based on frequency
-	hdbFiltB = SDBR_filterFloatByRange(hdbFiltA, SDBR_FREQUENCY, 13.f, 14.f);
+	hdbFiltB = SDBR_filterFloatByRange(hdbFiltA, SDBR_FREQUENCY_GHZ, 13.f, 14.f);
 	if (!hdbFiltB) {
 		printError();
 		retval = 4;
@@ -72,13 +72,13 @@ int main(int argc, char** argv) {
 		retval = 6;
 		goto freeObjs;
 	}
-	printf("There are %d points used to calculate the statistics.\n\n", count);
+	printf("There are %lld points used to calculate the statistics.\n\n", count);
 	for (int i=0; i<SDBR_NUM_DATA_ENTRIES_STATS; ++i) {
 		printf("\t%s", SDBR_stringifyStatsColumn(i));
 	}
 	printf("\n");
 	int k=0;
-	for (int j=0; i<SDBR_NUM_DATA_ENTRIES_FLOATS; ++j) {
+	for (int j=0; j<SDBR_NUM_DATA_ENTRIES_FLOATS; ++j) {
 		printf("%s", SDBR_stringifyFloatsColumn(j));
 		for (int i=0; i<SDBR_NUM_DATA_ENTRIES_STATS; ++i) {
 			printf("\t%f", summaryTable[k]);
@@ -91,7 +91,6 @@ int main(int argc, char** argv) {
 
 	// ... and display it
 
-*/
 
 	// Write the database
 	printf("Writing the database to outdb.csv\n");

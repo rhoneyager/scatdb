@@ -84,7 +84,7 @@ namespace scatdb {
 		addFilterInt((db::data_entries::data_entries_ints) param, rng);
 	}
 
-	std::shared_ptr<const db> filter::apply(std::shared_ptr<const db> src) const {
+	std::shared_ptr<const db> filter::apply(const db* src) const {
 		std::shared_ptr<db> res(new db), presort(new db);
 		presort->floatMat.resize(src->floatMat.rows(), src->floatMat.cols());
 		presort->intMat.resize(src->intMat.rows(), src->intMat.cols());
@@ -93,7 +93,7 @@ namespace scatdb {
 		res->intMat.resize(src->intMat.rows(), src->intMat.cols());
 		//std::cerr << "fm " << src->floatMat.rows() << "x" << src->floatMat.cols()
 		//	<< "  im " << src->intMat.rows() << "x" << src->intMat.cols() << std::endl;
-		int numLines = (int) res->floatMat.rows();
+		int numLines = (int)res->floatMat.rows();
 		int totLines = 0;
 
 		// Count number of filters. If zero, then can optimize.
@@ -138,6 +138,9 @@ namespace scatdb {
 		}
 
 		return res;
+	}
+	std::shared_ptr<const db> filter::apply(std::shared_ptr<const db> src) const {
+		return apply(src.get());
 	}
 }
 

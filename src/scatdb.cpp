@@ -406,6 +406,11 @@ namespace scatdb {
 #undef _tostr
 	}
 
+	template<>
+	DLEXPORT_SDBR const char* db::data_entries::stringify<uint64_t>(uint64_t ev) {
+		return db::data_entries::stringify<int>(ev);
+	}
+
 	DLEXPORT_SDBR const char* db::data_entries::stringifyStats(uint64_t ev) {
 		//S_MIN, S_MAX, MEDIAN, MEAN, SD, SKEWNESS, KURTOSIS
 #define _tostr(a) #a
