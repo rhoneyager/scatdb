@@ -58,6 +58,7 @@ namespace scatdb {
 				res->constructConverter = simpleUnits::constructConverter;
 				static const char* name = "1simple";
 				res->name = name;
+				_providers = std::shared_ptr<std::vector<conv_prov_cp > >(new std::vector<conv_prov_cp >);
 				_providers->push_back(res);
 			}
 			conv_hooks_t getHooks() {
