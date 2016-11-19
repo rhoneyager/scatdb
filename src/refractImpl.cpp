@@ -9,13 +9,13 @@
 #include <valarray>
 //#include <thread>
 #include <mutex>
-#include "../Ryan_Scat/refract.hpp"
-#include "../Ryan_Scat/refractBase.hpp"
-#include "../Ryan_Scat/zeros.hpp"
-#include "../Ryan_Scat/units/units.hpp"
+#include "../scatdb/refract/refract.hpp"
+#include "../scatdb/refract/refractBase.hpp"
+#include "../scatdb/zeros.hpp"
+#include "../scatdb/units/units.hpp"
 #include "../private/linterp.h"
-#include "../Ryan_Scat/error.hpp"
-#include "../Ryan_Scat/logging.hpp"
+#include "../scatdb/error.hpp"
+#include "../scatdb/logging.hpp"
 
 namespace {
 	std::mutex m_setup;
@@ -167,7 +167,7 @@ namespace {
 		else if (m == hanelAmedium::NACL_IM) return res_nacl_im;
 		else if (m == hanelAmedium::SEASALT_RE) return res_seasalt_re;
 		else if (m == hanelAmedium::SEASALT_IM) return res_seasalt_im;
-		else RSthrow(Ryan_Scat::error::error_types::xUnimplementedFunction)
+		else SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
 			.add<std::string>("Reason", "Bad enum input for hanelAmedium. "
 				"This is not a "
 				"case that the Hanel dielectric code can handle.");
@@ -280,7 +280,7 @@ namespace {
 		else if (m == hanelBmedium::SAND_E_IM) return res_sand_e_im;
 		else if (m == hanelBmedium::DUST_LIKE_RE) return res_dust_re;
 		else if (m == hanelBmedium::DUST_LIKE_IM) return res_dust_im;
-		else RSthrow(Ryan_Scat::error::error_types::xUnimplementedFunction)
+		else SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
 			.add<std::string>("Reason", "Bad enum input for hanelBmedium. "
 				"This is not a "
 				"case that the Hanel dielectric code can handle.");
@@ -293,10 +293,10 @@ namespace {
 // LIEBE, HUFFORD AND MANABE, INT. J. IR & MM WAVES V.12, pp.659-675
 //  (1991);  Liebe et al, AGARD Conf. Proc. 542, May 1993.
 // Valid from 0 to 1000 GHz. freq in GHz, temp in K
-void Ryan_Scat::refract::implementations::mWaterLiebe(double f, double t, std::complex<double> &m)
+void scatdb::refract::implementations::mWaterLiebe(double f, double t, std::complex<double> &m)
 {
 	if (f < 0 || f > 1000)
-		RSthrow(Ryan_Scat::error::error_types::xModelOutOfRange)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 		.add<double>("Frequency (GHz)", f)
 		.add<double>("Temperature (K)", t)
 		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,1000)");
@@ -313,14 +313,14 @@ void Ryan_Scat::refract::implementations::mWaterLiebe(double f, double t, std::c
 		+ complex<double>(eps1 - eps2, 0) / complex<double>(1.0, f / fs)
 		+ complex<double>(eps2, 0);
 	m = sqrt(eps);
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, 
+	SDBR_log("refract", scatdb::logging::DEBUG_2, 
 		"mWaterLiebe result for freq: " << f << " temp " << t << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mWaterFreshMeissnerWentz(double f, double tK, std::complex<double> &m)
+void scatdb::refract::implementations::mWaterFreshMeissnerWentz(double f, double tK, std::complex<double> &m)
 {
 	if (f < 0 || f > 500)
-		RSthrow(Ryan_Scat::error::error_types::xModelOutOfRange)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 		.add<double>("Frequency (GHz)", f)
 		.add<double>("Temperature (K)", tK)
 		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,500)");
@@ -333,7 +333,7 @@ void Ryan_Scat::refract::implementations::mWaterFreshMeissnerWentz(double f, dou
 
 	double tC = tK - 273.15;
 	if (tC < -20 || tC > 40)
-		RSthrow(Ryan_Scat::error::error_types::xModelOutOfRange)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 		.add<double>("Frequency (GHz)", f)
 		.add<double>("Temperature (K)", tK)
 		.add<std::string>("Reason", "Allowed temp. range (C) is (-20,40)");
@@ -356,12 +356,12 @@ void Ryan_Scat::refract::implementations::mWaterFreshMeissnerWentz(double f, dou
 	eps += complex<double>(e1 - einf, 0) / (complex<double>(1, f / nu2));
 	eps += complex<double>(einf, -sigma * oneover2pie0 / f); // -sigma / (f*2.*pi*e0));
 	m = sqrt(eps);
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, 
+	SDBR_log("refract", scatdb::logging::DEBUG_2, 
 		"mWaterFreshMeissnerWentz result for freq: " << f << " GHz temp " << tK << " K is " << m);
 }
 
 
-void Ryan_Scat::refract::implementations::mIceMatzler(double f, double t, std::complex<double> &m)
+void scatdb::refract::implementations::mIceMatzler(double f, double t, std::complex<double> &m)
 {
 	double er = 0;
 	if (t>243.0)
@@ -380,11 +380,11 @@ void Ryan_Scat::refract::implementations::mIceMatzler(double f, double t, std::c
 	double ei = alpha / f + beta*f;
 	std::complex<double> e(er, -ei);
 	m = sqrt(e);
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2,
+	SDBR_log("refract", scatdb::logging::DEBUG_2,
 		"mIceMatzler result for freq: " << f << " GHz and temp " << t << " K is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mIceWarren(double f, double t, std::complex<double> &m)
+void scatdb::refract::implementations::mIceWarren(double f, double t, std::complex<double> &m)
 {
 	// Warren table 2 is used for interpolation
 	static bool setup = false;
@@ -497,72 +497,72 @@ void Ryan_Scat::refract::implementations::mIceWarren(double f, double t, std::co
 	setupWarren();
 
 	// interpolate one value
-	double wvlen = Ryan_Scat::units::conv_spec("GHz", "mm").convert(f);
+	double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	std::array<double, 2> args = { wvlen, t - 273.15 };
 	m = std::complex<double>(interp_ML_warren_re->interp(args.begin()),
 		-1.0 * interp_ML_warren_im->interp(args.begin()));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mIceWarren result for freq: " << f << " GHz, temp " << t << " K is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mIceWarren result for freq: " << f << " GHz, temp " << t << " K is " << m);
 }
 
 
-void Ryan_Scat::refract::implementations::mWaterHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mWaterHanel(double lambda, std::complex<double> &m)
 {
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::WATER_RE)->interp(args),
 		-1.0 * setupHanelA(hanelAmedium::WATER_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mWaterHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mWaterHanel result for lambda: " << lambda << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mIceHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mIceHanel(double lambda, std::complex<double> &m)
 {
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::ICE_RE)->interp(args),
 		-1.0 * setupHanelA(hanelAmedium::ICE_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mIceHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mIceHanel result for lambda: " << lambda << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mNaClHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mNaClHanel(double lambda, std::complex<double> &m)
 {
-	//double wvlen = Ryan_Scat::units::conv_spec("GHz", "mm").convert(f);
+	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::NACL_RE)->interp(args),
 		-1.0 * setupHanelA(hanelAmedium::NACL_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mNaClHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mNaClHanel result for lambda: " << lambda << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mSeaSaltHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mSeaSaltHanel(double lambda, std::complex<double> &m)
 {
-	//double wvlen = Ryan_Scat::units::conv_spec("GHz", "mm").convert(f);
+	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::SEASALT_RE)->interp(args),
 		-1.0 * setupHanelA(hanelAmedium::SEASALT_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mSeaSaltHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mSeaSaltHanel result for lambda: " << lambda << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mDustHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mDustHanel(double lambda, std::complex<double> &m)
 {
-	//double wvlen = Ryan_Scat::units::conv_spec("GHz", "mm").convert(f);
+	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelB(hanelBmedium::DUST_LIKE_RE)->interp(args),
 		-1.0 * setupHanelB(hanelBmedium::DUST_LIKE_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mDustHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mDustHanel result for lambda: " << lambda << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mSandOHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mSandOHanel(double lambda, std::complex<double> &m)
 {
-	//double wvlen = Ryan_Scat::units::conv_spec("GHz", "mm").convert(f);
+	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelB(hanelBmedium::SAND_O_RE)->interp(args),
 		-1.0 * setupHanelB(hanelBmedium::SAND_O_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mSandOHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mSandOHanel result for lambda: " << lambda << " is " << m);
 }
 
-void Ryan_Scat::refract::implementations::mSandEHanel(double lambda, std::complex<double> &m)
+void scatdb::refract::implementations::mSandEHanel(double lambda, std::complex<double> &m)
 {
-	//double wvlen = Ryan_Scat::units::conv_spec("GHz", "mm").convert(f);
+	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelB(hanelBmedium::SAND_E_RE)->interp(args),
 		-1.0 * setupHanelB(hanelBmedium::SAND_E_IM)->interp(args));
-	ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "mSandEHanel result for lambda: " << lambda << " is " << m);
+	SDBR_log("refract", scatdb::logging::DEBUG_2, "mSandEHanel result for lambda: " << lambda << " is " << m);
 }
 

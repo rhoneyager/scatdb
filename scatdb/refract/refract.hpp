@@ -1,5 +1,5 @@
 #pragma once
-#include "defs.hpp"
+#include "../defs.hpp"
 #pragma warning( disable : 4003 ) // Bug in boost with VS2016.3
 #include <complex>
 #include <functional>
@@ -10,13 +10,13 @@
 #include <boost/parameter/name.hpp>
 #include <boost/parameter/preprocessor.hpp>
 #include <boost/lexical_cast.hpp>
-#include "units/units.hpp"
-#include "error.hpp"
-#include "logging.hpp"
+#include "../units/units.hpp"
+#include "../error.hpp"
+#include "../logging.hpp"
 #include "refractBase.hpp"
-#include "optionsForwards.hpp"
+#include "../optionsForwards.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace refract {
 		struct requirement_s;
 		typedef std::shared_ptr<const requirement_s> requirement_p;
@@ -59,12 +59,12 @@ namespace Ryan_Scat {
 		typedef std::function<void(double, std::complex<double>&)> refractFunction_freqonly_t;
 		typedef std::function<void(double, double, std::complex<double>&)> refractFunction_freq_temp_t;
 
-		Ryan_Scat_DL provider_p findProvider(const std::string &subst,
+		DLEXPORT_SDBR provider_p findProvider(const std::string &subst,
 			bool haveFreq = true, bool haveTemp = true);
 
-		Ryan_Scat_DL void prepRefract(provider_p, const std::string &inFreqUnits,
+		DLEXPORT_SDBR void prepRefract(provider_p, const std::string &inFreqUnits,
 			refractFunction_freqonly_t&);
-		Ryan_Scat_DL void prepRefract(provider_p,
+		DLEXPORT_SDBR void prepRefract(provider_p,
 			const std::string &inFreqUnits, const std::string &inTempUnits,
 			refractFunction_freq_temp_t&);
 		

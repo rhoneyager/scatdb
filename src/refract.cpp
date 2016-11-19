@@ -10,15 +10,15 @@
 #include <mutex>
 #include <boost/shared_ptr.hpp>
 #include <boost/tokenizer.hpp>
-#include "../Ryan_Scat/refract.hpp"
-#include "../Ryan_Scat/refractBase.hpp"
-#include "../Ryan_Scat/zeros.hpp"
-#include "../Ryan_Scat/units/units.hpp"
+#include "../scatdb/refract/refract.hpp"
+#include "../scatdb/refract/refractBase.hpp"
+#include "../scatdb/zeros.hpp"
+#include "../scatdb/units/units.hpp"
 //#include "../private/linterp.h"
-#include "../Ryan_Scat/error.hpp"
-#include "../Ryan_Scat/logging.hpp"
+#include "../scatdb/error.hpp"
+#include "../scatdb/logging.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace refract {
 		namespace implementations {
 			std::mutex m_refracts;
