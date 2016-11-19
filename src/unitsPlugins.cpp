@@ -85,6 +85,11 @@ namespace scatdb {
 			}
 			// Only return nullptr if unable to find a usable hook.
 			SDBR_log("units", scatdb::logging::ERROR, "No registered handler for unit conversion found.");
+			SDBR_throw(scatdb::error::error_types::xBadInput)
+				.add<std::string>("Reason", "There is no code which can handle this unit conversion.")
+				.add<std::string>("inUnits", inUnits)
+				.add<std::string>("outUnits", outUnits)
+				;
 			return nullptr;
 		}
 

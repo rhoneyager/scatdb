@@ -80,17 +80,26 @@ int main(int argc, char** argv) {
 			std::getline(cin, outUnits);
 		}
 		if ((!vm.count("input") || !vm.count("input-units") || !vm.count("output-units")) & !isSpec) {
-			cout << "Is this a spectral unit conversion (i.e. GHz to mm)? ";
+			cout << "Is this a spectral unit conversion (i.e. GHz to mm) [no]? ";
 			string temp;
 			std::getline(cin, temp);
-			try {
-				isSpec = boost::lexical_cast<bool>(temp);
+			if (temp.size()) {
+				char c = temp.at(0);
+				switch (c) {
+				case 'N': case 'n': case 'f': case 'F': case '0':
+					isSpec = false;
+					break;
+				case 'Y': case 'y': case 't': case 'T': case '1':
+					isSpec = true;
+					break;
+				default:
+					SDBR_throw(scatdb::error::error_types::xBadInput)
+						.add<std::string>("Reason", "Cannot parse boolean")
+						.add<string>("Input _Bool_", temp);
+					break;
+				}
 			}
-			catch (boost::bad_lexical_cast) {
-				SDBR_throw(scatdb::error::error_types::xBadInput)
-					.add<std::string>("Reason", "Cannot parse boolean")
-					.add<string>("Input _Bool_", temp);
-			}
+			else isSpec = false;
 		}
 
 		std::shared_ptr<scatdb::units::converter> cnv;
