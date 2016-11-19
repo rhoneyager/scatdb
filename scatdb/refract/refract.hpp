@@ -39,6 +39,8 @@ namespace scatdb {
 			virtual ~provider_s();
 			std::string name;
 			std::string substance;
+			std::string source;
+			std::string notes;
 			std::map<std::string, requirement_p> reqs;
 			provider_mp addReq(const std::string &name, const std::string &units,
 				double low, double high);
@@ -50,7 +52,9 @@ namespace scatdb {
 				OTHER
 			} speciality_function_type;
 			void* specialty_pointer;
-			static provider_mp generate(const std::string &name, const std::string &subst,
+			static provider_mp generate(
+				const std::string &name, const std::string &subst,
+				const std::string &source, const std::string &notes,
 				enum class provider_s::spt sv, void* ptr);
 		};
 		typedef std::shared_ptr<const std::vector<provider_p> > all_providers_p;

@@ -30,38 +30,66 @@ namespace scatdb {
 					new std::map<std::string, provider_p>);
 
 				auto pmWaterLiebe = provider_s::generate(
-					"mWaterLiebe", "water", provider_s::spt::FREQTEMP, (void*)mWaterLiebe)
+					"mWaterLiebe", "water", 
+					"Liebe, H.J., Hufford, G.A. & Manabe, T. Int J Infrared Milli Waves (1991) 12: 659. doi:10.1007/BF01008897",
+					"",
+					provider_s::spt::FREQTEMP, (void*)mWaterLiebe)
 					->addReq("spec", "GHz", 0, 1000)->addReq("temp", "K", 273.15, 373.15)->registerFunc();
 				auto pmWaterFreshMeissnerWentz = provider_s::generate(
-					"mWaterFreshMeissnerWentz", "water", provider_s::spt::FREQTEMP, (void*)mWaterFreshMeissnerWentz)
+					"mWaterFreshMeissnerWentz", "water", 
+					"T. Meissner and F. J. Wentz, \"The complex dielectric constant of pure and sea water from microwave satellite observations\", IEEE Trans. Geosci. Remote Sensing, vol. 42, no.9, pp. 1836-1849, September 2004.",
+					"For pure water (no salt)",
+					provider_s::spt::FREQTEMP, (void*)mWaterFreshMeissnerWentz)
 					->addReq("spec", "GHz", 0, 500)->addReq("temp", "K", 253.15, 313.15)->registerFunc();
 				auto pmIceMatzler = provider_s::generate(
-					"mIceMatzler", "ice", provider_s::spt::FREQTEMP, (void*)mIceMatzler)
+					"mIceMatzler", "ice", 
+					"Thermal Microwave Radiation: Applications for Remote Sensing, "
+					"Chapter 5, Microwave dielectric properties of ice, "
+					"By Christian Mätzler(2006)",
+					"",
+					provider_s::spt::FREQTEMP, (void*)mIceMatzler)
 					->addReq("spec", "GHz", 0, 1000)->addReq("temp", "K", 0, 273.15)->registerFunc();
 				auto pmIceWarren = provider_s::generate(
-					"mIceWarren", "ice", provider_s::spt::FREQTEMP, (void*)mIceWarren)
+					"mIceWarren", "ice", 
+					"Stephen G. Warren, \"Optical constants of ice from the ultraviolet to the microwave, \" Appl. Opt. 23, 1206-1225 (1984)",
+					"",
+					provider_s::spt::FREQTEMP, (void*)mIceWarren)
 					->addReq("spec", "GHz", 0.167, 8600)->addReq("temp", "degC", -60, -1)->registerFunc();
 				auto pmWaterHanel = provider_s::generate(
-					"mWaterHanel", "water", provider_s::spt::FREQ, (void*)mWaterHanel)
+					"mWaterHanel", "water", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mWaterHanel)
 					->addReq("spec", "um", 0.2, 30000)->registerFunc();
 				auto pmIceHanel = provider_s::generate(
-					"mIceHanel", "water", provider_s::spt::FREQ, (void*)mIceHanel)
+					"mIceHanel", "water", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mIceHanel)
 					->addReq("spec", "um", 0.2, 30000)->registerFunc();
 
 				auto pmNaClHanel = provider_s::generate(
-					"mNaClHanel", "NaCl", provider_s::spt::FREQ, (void*)mNaClHanel)
+					"mNaClHanel", "NaCl", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mNaClHanel)
 					->addReq("spec", "um", 0.2, 30000)->registerFunc();
 				auto pmSeaSaltHanel = provider_s::generate(
-					"mSeaSaltHanel", "SeaSalt", provider_s::spt::FREQ, (void*)mSeaSaltHanel)
+					"mSeaSaltHanel", "SeaSalt", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mSeaSaltHanel)
 					->addReq("spec", "um", 0.2, 30000)->registerFunc();
 				auto pmDustHanel = provider_s::generate(
-					"mDustHanel", "Dust", provider_s::spt::FREQ, (void*)mDustHanel)
+					"mDustHanel", "Dust", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mDustHanel)
 					->addReq("spec", "um", 0.2, 300)->registerFunc();
 				auto pmSandOHanel = provider_s::generate(
-					"mSandOHanel", "Sand_O", provider_s::spt::FREQ, (void*)mSandOHanel)
+					"mSandOHanel", "Sand_O", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mSandOHanel)
 					->addReq("spec", "um", 0.2, 300)->registerFunc();
 				auto pmSandEHanel = provider_s::generate(
-					"mSandEHanel", "Sand_E", provider_s::spt::FREQ, (void*)mSandEHanel)
+					"mSandEHanel", "Sand_E", 
+					"Tables from Thomas Hanel. Not sure which paper.", "",
+					provider_s::spt::FREQ, (void*)mSandEHanel)
 					->addReq("spec", "um", 0.2, 300)->registerFunc();
 
 				inited = true;
@@ -70,11 +98,15 @@ namespace scatdb {
 			std::map<std::string, all_providers_mp> providersSet;
 		}
 
-		provider_mp provider_s::generate(const std::string &name, const std::string &subst,
+		provider_mp provider_s::generate(
+			const std::string &name, const std::string &subst,
+			const std::string &source, const std::string &notes,
 			enum class provider_s::spt sv, void* ptr) {
 			provider_mp res(new provider_s);
 			res->name = name;
 			res->substance = subst;
+			res->source = source;
+			res->notes = notes;
 			res->speciality_function_type = sv;
 			res->specialty_pointer = ptr;
 			return res;
