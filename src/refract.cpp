@@ -142,10 +142,10 @@ namespace scatdb {
 			};
 			units::converter_p converter;
 			if (prov->speciality_function_type != provider_s::spt::FREQ)
-				RSthrow(Ryan_Scat::error::error_types::xBadInput)
+				SDBR_throw(scatdb::error::error_types::xBadInput)
 				.add<std::string>("Reason", "You called the wrong prepRefract.");
 			if (!prov->reqs.count("spec"))
-				RSthrow(Ryan_Scat::error::error_types::xBadFunctionMap)
+				SDBR_throw(scatdb::error::error_types::xBadFunctionMap)
 				.add<std::string>("Reason", "Attempting to prepare a refractive index formula that does not "
 					"require a frequency / wavelength / wavenumber, but one was provided.");
 			std::string reqUnits = prov->reqs.at("spec")->parameterUnits;
@@ -181,10 +181,10 @@ namespace scatdb {
 			};
 			units::converter_p converterFreq, converterTemp;
 			if (prov->speciality_function_type != provider_s::spt::FREQTEMP)
-				RSthrow(Ryan_Scat::error::error_types::xBadInput)
+				SDBR_throw(scatdb::error::error_types::xBadInput)
 				.add<std::string>("Reason", "You called the wrong prepRefract.");
 			if (!prov->reqs.count("spec"))
-				RSthrow(Ryan_Scat::error::error_types::xBadFunctionMap)
+				SDBR_throw(scatdb::error::error_types::xBadFunctionMap)
 				.add<std::string>("Reason", "Attempting to prepare a refractive index formula that does not "
 					"require a frequency / wavelength / wavenumber, but one was provided.");
 			std::string reqFreqUnits = prov->reqs.at("spec")->parameterUnits;
@@ -192,7 +192,7 @@ namespace scatdb {
 				converterFreq = units::conv_spec::generate(inFreqUnits, reqFreqUnits);
 
 			if (!prov->reqs.count("temp"))
-				RSthrow(Ryan_Scat::error::error_types::xBadFunctionMap)
+				SDBR_throw(scatdb::error::error_types::xBadFunctionMap)
 				.add<std::string>("Reason", "Attempting to prepare a refractive index formula that does not "
 					"require a temperature, but one was provided.");
 			std::string reqTempUnits = prov->reqs.at("temp")->parameterUnits;
@@ -234,7 +234,7 @@ namespace scatdb {
 			eRes = zeros::secantMethod(formula, gA, gB);
 
 			eToM(eRes, Mres);
-			ryan_log("refract", Ryan_Scat::logging::DEBUG_2,
+			SDBR_log("refract", scatdb::logging::DEBUG_2,
 				"bruggeman code called\n\tMa " << Ma << "\n\tMb " << Mb << "\n\tfa " << fa
 				<< "\n\tMres " << Mres);
 		}
@@ -254,7 +254,7 @@ namespace scatdb {
 			eRes = (complex<double>(2., 0) * fact + complex<double>(1., 0))
 				/ (complex<double>(1., 0) - fact);
 			eToM(eRes, Mres);
-			ryan_log("refract", Ryan_Scat::logging::DEBUG_2,
+			SDBR_log("refract", scatdb::logging::DEBUG_2,
 				"debyeDry code called\n\tMa " << Ma << "\n\tMb " << Mb << "\n\tfa " << fa
 				<< "\n\tMres " << Mres);
 		}
@@ -273,7 +273,7 @@ namespace scatdb {
 			eRes = eB * (complex<double>(2, 0) * a + complex<double>(1, 0))
 				/ (complex<double>(1, 0) - a);
 			eToM(eRes, Mres);
-			ryan_log("refract", Ryan_Scat::logging::DEBUG_2,
+			SDBR_log("refract", scatdb::logging::DEBUG_2,
 				"maxwellGarnettSpheres code called\n\tMa " << Ma << "\n\tMb " << Mb << "\n\tfa " << fa
 				<< "\n\tMres " << Mres);
 		}
@@ -294,7 +294,7 @@ namespace scatdb {
 
 			eRes = ((cfc*beta) + (cf*eA)) / (cf + (cfc*beta));
 			eToM(eRes, Mres);
-			ryan_log("refract", Ryan_Scat::logging::DEBUG_2, 
+			SDBR_log("refract", scatdb::logging::DEBUG_2, 
 				"maxwellGarnettEllipsoids code called\n\tMa " << Ma << "\n\tMb " << Mb << "\n\tfa " << fa
 				<< "\n\tMres " << Mres);
 		}
@@ -328,7 +328,7 @@ namespace scatdb {
 			complex<double> gA(1.0, 1.0), gB(1.55, 1.45);
 			eRes = zeros::secantMethod(formulaSihvola, gA, gB);
 			eToM(eRes, Mres);
-			ryan_log("refract", Ryan_Scat::logging::DEBUG_2, "sihvola code called\n\tMa " << Ma << "\n\tMb " << Mb << "\n\tfa " << fa
+			SDBR_log("refract", scatdb::logging::DEBUG_2, "sihvola code called\n\tMa " << Ma << "\n\tMb " << Mb << "\n\tfa " << fa
 				<< "\n\tnu " << nu << "\n\tMres " << Mres);
 		}
 
@@ -407,7 +407,7 @@ namespace scatdb {
 		*/
 
 		/*
-		void Ryan_Scat::refract::maxwellGarnett(std::complex<double> Mice, std::complex<double> Mwater,
+		void scatdb::refract::maxwellGarnett(std::complex<double> Mice, std::complex<double> Mwater,
 		std::complex<double> Mair, double fIce, double fWater, std::complex<double> &Mres)
 		{
 		using namespace std;
