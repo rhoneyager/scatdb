@@ -43,7 +43,7 @@ namespace scatdb {
 	**/
 	bool db::findDB(std::string &filename) {
 		if (filename.size()) {
-			ryan_log("scatdb", scatdb::logging::DEBUG_2,
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 				"Using database file: " << filename);
 			return true;
 		}
@@ -51,7 +51,7 @@ namespace scatdb {
 		filename = "";
 		using namespace boost::filesystem;
 
-		ryan_log("scatdb", scatdb::logging::NOTIFICATION, 
+		SDBR_log("scatdb", scatdb::logging::NOTIFICATION, 
 			"Finding '" << scatdb_name << "' file");
 		// Check application execution arguments
 		//BOOST_LOG_SEV(lg, Ryan_Debug::log::debug_2) << "Checking app command line";
@@ -66,13 +66,13 @@ namespace scatdb {
 		// Checking environment variables
 		using namespace scatdb;
 		auto mInfo = debug::getCurrentAppInfo();
-		ryan_log("scatdb", scatdb::logging::DEBUG_2,
+		SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 			"Checking environment variable '"
 			<< std::string(scatdb_db_env) << "'.");
 		
 		const std::map<std::string, std::string> &mEnv = mInfo->pInfo->expandedEnviron;
 		auto findEnv = [&](const std::string &fkey, std::string &outname) -> bool {
-			ryan_log("scatdb", scatdb::logging::DEBUG_2,
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 				"Parsing list of environment variables to find '" << fkey << "'.");
 			std::string flkey = fkey;
 			std::transform(flkey.begin(), flkey.end(), flkey.begin(), ::tolower);
@@ -89,7 +89,7 @@ namespace scatdb {
 				typedef boost::tokenizer<boost::char_separator<char> >
 					tokenizer;
 				boost::char_separator<char> sep(";");
-				ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+				SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 					"Candidates are: " << it->second);
 				std::string ssubst;
 				tokenizer tcom(it->second, sep);
@@ -99,19 +99,19 @@ namespace scatdb {
 					if (exists(testEnv))
 					{
 						outname = it->second;
-						ryan_log("scatdb", scatdb::logging::DEBUG_2,
+						SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 							"Using " << outname);
 						return true;
 					}
 				}
-			} else ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			} else SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"Environment variable '" << fkey << "' was not found.");
 			return false;
 		};
 		if (findEnv(std::string(scatdb_db_env), filename)) return true;
 
 		// Check a few other places
-		ryan_log("scatdb", scatdb::logging::DEBUG_2,
+		SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 			"Checking app data directories for '" << scatdb_name << "'.");
 		std::string sAppConfigDir = mInfo->appConfigDir;
 		std::string sHomeDir = mInfo->homeDir;
@@ -130,7 +130,7 @@ namespace scatdb {
 			if (searchParent) pBase.remove_leaf();
 			if (suffix.size()) pBase = pBase / path(suffix);
 
-			ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"Searching in: " << pBase.string());
 			path p1 = pBase / std::string(scatdb_name);
 
@@ -152,13 +152,13 @@ namespace scatdb {
 
 		if (!filename.size()) {
 			std::string RDCpath;
-			ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"Searching based on the '" << scatdb_dir_env << "' environment variable.");
 
 			findEnv(std::string(scatdb_dir_env), RDCpath);
 			if (searchPath(RDCpath, "../../../../share", false)) found = true;
 		}
-		ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+		SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 			"Searching based on the path to the dll.");
 
 
@@ -166,14 +166,14 @@ namespace scatdb {
 		if (searchPath(dllPath, "../../share", false)) found = true;
 
 		if (filename.size()) {
-			ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"Using database file: " << filename);
 			return true;
 		}
 
 		if (!finddberrgiven) {
 			finddberrgiven = true;
-			ryan_log("scatdb", scatdb::logging::ERROR,
+			SDBR_log("scatdb", scatdb::logging::ERROR,
 				"Unable to find the '" << scatdb_name << "' database file. Please consult the log to "
 				"learn which paths were examined. To view the log on the console, specify "
 				"option '--log-level-console-threshold 0' when running this program. Alternatively, to write the "
@@ -256,7 +256,7 @@ namespace scatdb {
 
 			left = pEnd + 1;
 		}
-		ryan_log("scatdb", scatdb::logging::DEBUG_2,
+		SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 			"Overall database has "
 			<< numLines << " lines of data that were successfully read.");
 	}
@@ -266,23 +266,23 @@ namespace scatdb {
 		if (!dbfile && loadedDB) return loadedDB;
 
 		// Load the database
-		ryan_log("scatdb", scatdb::logging::DEBUG_2,
+		SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 			"loadDB called. Need to load database.");
 		std::string dbf;
 		if (dbfile) dbf = std::string(dbfile);
 		if (!dbf.size()) {
 			findDB(dbf); // If dbfile not provided, take a guess.
-			ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"dbfile automatically determined as: " << dbf);
 		} else {
-			ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"dbfile provided in call: " << dbf);
 		}
 		using namespace boost::filesystem;
 		path p(dbf);
 		if (!dbf.size()) {
 			// Scattering database cannot be found.
-			ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"Scattering database cannot be found.");
 			std::cerr << "Scattering database cannot be found." << std::endl;
 			SDBR_throw(::scatdb::error::error_types::xMissingFile)
@@ -291,7 +291,7 @@ namespace scatdb {
 			if (!exists(p)) {
 				// Supplied path to scattering database does not exist.
 				// Scattering database cannot be found.
-				ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+				SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 					"Scattering database cannot be found at " << dbf);
 				std::cerr << "Scattering database cannot be found at " << dbf;
 				SDBR_throw(scatdb::error::error_types::xMissingFile)
@@ -311,7 +311,7 @@ namespace scatdb {
 		// subsequent function calls.
 		if (!loadedDB) loadedDB = newdb;
 
-		ryan_log("scatdb", scatdb::logging::DEBUG_2, 
+		SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 			"Database loaded successfully.");
 		return newdb;
 	}

@@ -4,7 +4,7 @@
 #include "../defs.hpp"
 #include <string>
 #include <memory>
-namespace Ryan_Scat {
+namespace scatdb {
 	/** \brief Provides convenient runtime conversion functions for converting
 	 * different units. 
 	 *
@@ -25,7 +25,7 @@ namespace Ryan_Scat {
 		* Now, with the appropriate DLL loaded, the udunits system will be used for most conversions.
 		* The derived classes still have a bit of code for when udunits is not installed.
 		**/
-		class Ryan_Scat_DL converter
+		class DLEXPORT_SDBR converter
 		{
 		public:
 			virtual ~converter();
@@ -44,7 +44,7 @@ namespace Ryan_Scat {
 
 		/// \brief Perform interconversions between frequency, wavelength and wavenumber
 		/// (GHz, Hz, m, cm, um, cm^-1, m^-1)
-		class Ryan_Scat_DL conv_spec : public converter
+		class DLEXPORT_SDBR conv_spec : public converter
 		{
 		public:
 			conv_spec(const std::string &inUnits, const std::string &outUnits);

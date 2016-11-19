@@ -1,9 +1,11 @@
 #include <string>
-#include "../Ryan_Scat/units/units.hpp"
-#include "../Ryan_Scat/units/unitsPlugins.hpp"
+#include "../scatdb/units/units.hpp"
+#include "../scatdb/units/unitsPlugins.hpp"
+#include "../scatdb/error.hpp"
 #include "../private/unitsBackend.hpp"
+#include "../private/options.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace units {
 		namespace implementations {
 			bool simpleUnits::canConvert(Converter_registry_provider::optsType opts) {
@@ -163,7 +165,7 @@ namespace Ryan_Scat {
 			double simpleUnits::convert(double inVal) const
 			{
 				if (_valid) return ((inVal + _inOffset) * _convFactor) + (_outOffset);
-				RSthrow(Ryan_Scat::error::error_types::xBadInput)
+				SDBR_throw(scatdb::error::error_types::xBadInput)
 					.add<std::string>("Reason", "Trying to convert with bad converter units.")
 					;
 				return 0;

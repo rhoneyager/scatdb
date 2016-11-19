@@ -39,6 +39,6 @@ namespace scatdb {
 	}
 }
 
-#define ryan_log(c,p,x) { ::std::ostringstream l; l << x; \
+#define SDBR_log(c,p,x) { ::std::ostringstream l; l << x; \
 	::std::string s = l.str(); \
 	::scatdb::logging::emit_log(c, s, p); }

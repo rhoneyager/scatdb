@@ -118,7 +118,7 @@ namespace scatdb
 			if (vm.count("scatdb-config-file"))
 			{
 				debug::sConfigDefaultFile = vm["scatdb-config-file"].as<std::string>();
-				ryan_log("dll", ::scatdb::logging::NORMAL,
+				SDBR_log("dll", ::scatdb::logging::NORMAL,
 					"Console override of Ryan_Debug-config-file: " 
 					<< debug::sConfigDefaultFile);
 			}
@@ -138,7 +138,7 @@ namespace scatdb
 				sCmdP.append(*it);
 			}
 			std::string hdir(hp->homeDir);
-			ryan_log("dll", ::scatdb::logging::NORMAL, 
+			SDBR_log("dll", ::scatdb::logging::NORMAL, 
 				"Starting application: \n"
 				<< "\tName: " << appName
 				<< "\n\tPath: " << appPath
@@ -162,14 +162,14 @@ namespace scatdb
 			if (vm.count("close-on-finish")) {
 				bool val = !(vm["close-on-finish"].as<bool>());
 				debug::waitOnExit(val);
-				ryan_log("dll", ::scatdb::logging::NORMAL,
+				SDBR_log("dll", ::scatdb::logging::NORMAL,
 					"Console override of waiting on exit: " << val);
 			}
 
-			ryan_log("dll", ::scatdb::logging::NORMAL,
+			SDBR_log("dll", ::scatdb::logging::NORMAL,
 				"Switching to primary logging system");
 			//setupLogging(vm, sevlev);
-			ryan_log("dll", ::scatdb::logging::NORMAL, "Primary logging system started.");
+			SDBR_log("dll", ::scatdb::logging::NORMAL, "Primary logging system started.");
 			
 			//registry::process_static_options(vm);
 
@@ -195,7 +195,7 @@ namespace scatdb
 			db::findDB(dbfile);
 			db::loadDB(dbfile.c_str());
 
-			ryan_log("dll", ::scatdb::logging::NORMAL, spreambles);
+			SDBR_log("dll", ::scatdb::logging::NORMAL, spreambles);
 		}
 
 

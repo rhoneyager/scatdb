@@ -1,10 +1,12 @@
 #include <string>
-#include "../Ryan_Scat/units/units.hpp"
+#include "../scatdb/units/units.hpp"
 #include "../private/unitsBackend.hpp"
-#include "../Ryan_Scat/units/unitsPlugins.hpp"
-#include "../Ryan_Scat/logging.hpp"
+#include "../scatdb/units/unitsPlugins.hpp"
+#include "../private/options.hpp"
+#include "../scatdb/error.hpp"
+#include "../scatdb/logging.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace units {
 		converter::converter() { implementations::_init(); }
 
@@ -25,21 +27,19 @@ namespace Ryan_Scat {
 
 		bool converter::canConvert(const std::string &inUnits, const std::string &outUnits) {
 			implementations::_init(); // Static function that registers the builtin unit converters.
-			ryan_log("units", Ryan_Scat::logging::NORMAL,
+			SDBR_log("units", scatdb::logging::NORMAL,
 				"Creating converter for " << inUnits << " to " << outUnits);
-
-			auto hooks = ::Ryan_Scat::registry::usesDLLregistry<
-				implementations::converter_provider_registry, implementations::Converter_registry_provider>::getHooks();
+			auto hooks = implementations::getHooks();
 			//	hull_provider_registry, hull_provider<convexHull> >::getHooks();
 			//std::cerr << hooks->size() << std::endl;
-			auto opts = Ryan_Scat::registry::options::generate();
+			auto opts = scatdb::registry::options::generate();
 			opts->setVal<std::string>("inUnits", inUnits);
 			opts->setVal<std::string>("outUnits", outUnits);
 			for (const auto &i : *(hooks.get()))
 			{
-				if (!i.canConvert) continue;
-				if (!i.constructConverter) continue;
-				if (!i.canConvert(opts)) continue;
+				if (!i->canConvert) continue;
+				if (!i->constructConverter) continue;
+				if (!i->canConvert(opts)) continue;
 				return true;
 			}
 			return false;
@@ -51,10 +51,10 @@ namespace Ryan_Scat {
 		}
 		double converter::convert(double in) const {
 			if (!h)
-				RSthrow(Ryan_Scat::error::error_types::xNullPointer)
+				SDBR_throw(scatdb::error::error_types::xNullPointer)
 					.add<std::string>("Reason", "Converter handler is null. Probably incompatible units.");
 			if (!isValid())
-				RSthrow(Ryan_Scat::error::error_types::xBadInput)
+				SDBR_throw(scatdb::error::error_types::xBadInput)
 				.add<std::string>("Reason", "Conversion between the two specified units is invalid.");
 			return h->convert(in);
 		}
@@ -65,10 +65,10 @@ namespace Ryan_Scat {
 			: converter()
 		{
 			implementations::_init(); // Static function that registers the builtin unit converters.
-			ryan_log("units", Ryan_Scat::logging::DEBUG_2,
+			SDBR_log("units", scatdb::logging::DEBUG_2,
 				"Creating spectrum converter for " << in << " to " << out);
 
-			auto opts = Ryan_Scat::registry::options::generate();
+			auto opts = scatdb::registry::options::generate();
 			opts->setVal<std::string>("inUnits", in);
 			opts->setVal<std::string>("outUnits", out);
 			h = implementations::spectralUnits::constructConverter(opts);

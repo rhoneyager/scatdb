@@ -158,6 +158,7 @@ set(scatdb_refract
 	)
 SET(scatdb_units
 	src/units.cpp
+	src/unitsPlugins.cpp
 	src/unitsSimple.cpp
 	scatdb/units/units.hpp
 	scatdb/units/unitsPlugins.hpp
@@ -173,6 +174,7 @@ set( scatdb_srcs
 	${scatdb_main}
 	${scatdb_debug}
 	${scatdb_os}
+	${scatdb_units}
 	"${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake-settings.h"
    )

@@ -118,7 +118,7 @@ namespace scatdb {
 				if (!success)
 				{
 					success = GetLastError();
-					ryan_log("os_functions", ::scatdb::logging::ERROR,
+					SDBR_log("os_functions", ::scatdb::logging::ERROR,
 						"Failure in getPathWIN32: " << success);
 					return false;
 				}
@@ -379,7 +379,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"getUsername failed with error " << err);
 				}
 				return username;
@@ -401,7 +401,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"getHostname failed with error " << err);
 				}
 				return hostname;
@@ -421,7 +421,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"SHGetFolderPathA failed with error " << err);
 				}
 				CoTaskMemFree(static_cast<void*>(hname));
@@ -442,7 +442,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"SHGetFolderPathA failed with error " << err);
 				}
 				CoTaskMemFree(static_cast<void*>(hname));
@@ -516,7 +516,7 @@ namespace scatdb {
 				}
 				else {
 					// Privilege escalation required. Need to handle this case.
-					ryan_log("os_functions", ::scatdb::logging::ERROR,
+					SDBR_log("os_functions", ::scatdb::logging::ERROR,
 						"Privilege escalation required to get full process information for another process. UNIMPLEMENTED.");
 				}
 

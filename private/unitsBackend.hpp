@@ -1,19 +1,18 @@
 #pragma once
-#include "../Ryan_scat/defs.hpp"
+#include "../scatdb/defs.hpp"
 #include <string>
 #include <memory>
-#include "../Ryan_scat/registry.hpp"
-#include "../Ryan_Scat/units/units.hpp"
-#include "../Ryan_Scat/units/unitsPlugins.hpp"
-namespace Ryan_Scat {
+#include "../scatdb/units/units.hpp"
+#include "../scatdb/units/unitsPlugins.hpp"
+namespace scatdb {
 	namespace units {
 		namespace implementations {
-			INTERNAL_TAG void _init();
-			INTERNAL_TAG void _registerBackend(const std::string &inUnits, const std::string &outUnits,
+			HIDDEN_SDBR void _init();
+			HIDDEN_SDBR void _registerBackend(const std::string &inUnits, const std::string &outUnits,
 				const std::string &family, converter_p);
-			INTERNAL_TAG converter_p _queryBackend(const std::string &inUnits, const std::string &outUnits,
+			HIDDEN_SDBR converter_p _queryBackend(const std::string &inUnits, const std::string &outUnits,
 				const std::string &family);
-			struct INTERNAL_TAG simpleUnits : public Unithandler {
+			struct HIDDEN_SDBR simpleUnits : public Unithandler {
 				static bool canConvert(Converter_registry_provider::optsType opts);
 				static std::shared_ptr<const Unithandler> constructConverter(
 					Converter_registry_provider::optsType opts);
@@ -33,7 +32,7 @@ namespace Ryan_Scat {
 				double convert(double inVal) const;
 			};
 
-			struct INTERNAL_TAG spectralUnits : public implementations::Unithandler {
+			struct HIDDEN_SDBR spectralUnits : public implementations::Unithandler {
 				static bool canConvert(Converter_registry_provider::optsType opts);
 				static std::shared_ptr<const implementations::Unithandler> constructConverter(
 					Converter_registry_provider::optsType opts);
