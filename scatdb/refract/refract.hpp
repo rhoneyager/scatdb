@@ -72,6 +72,8 @@ namespace scatdb {
 
 		DLEXPORT_SDBR provider_p findProvider(const std::string &subst,
 			bool haveFreq = true, bool haveTemp = true, const std::string &startAt = "");
+		DLEXPORT_SDBR all_providers_p findProviders(const std::string &subst,
+			bool haveFreq = true, bool haveTemp = true);
 
 		DLEXPORT_SDBR void prepRefract(provider_p, const std::string &inFreqUnits,
 			refractFunction_freqonly_t&);

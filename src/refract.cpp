@@ -211,6 +211,20 @@ namespace scatdb {
 			}
 			return emptyres;
 		}
+		all_providers_p findProviders(const std::string &subst,
+			bool haveFreq, bool haveTemp) {
+			all_providers_mp res(new provider_collection_type);
+
+			if (implementations::allProvidersSet->size() == 0) implementations::_init();
+			if (!implementations::providersSet.count(subst)) return res;
+			all_providers_p pss = implementations::providersSet.at(subst);
+			for (const auto &p : *(pss.get())) {
+				if (p.second->reqs.count("spec") && !haveFreq) continue;
+				if (p.second->reqs.count("temp") && !haveTemp) continue;
+				res->insert(p);
+			}
+			return res;
+		}
 		void prepRefract(provider_p prov, const std::string &inFreqUnits,
 			refractFunction_freqonly_t& res) {
 			/** Translation function exists to ensure that the units are passed as expected. **/
