@@ -32,8 +32,8 @@ int main(int argc, char** argv) {
 
 		po::positional_options_description p;
 		p.add("input", 1);
-		p.add("input-units", 2);
-		p.add("output-units", 3);
+		p.add("input-units", 1);
+		p.add("output-units", 1);
 
 		desc.add(cmdline).add(config);
 		oall.add(cmdline).add(config).add(hidden);

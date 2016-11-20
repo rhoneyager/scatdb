@@ -66,7 +66,7 @@ namespace scatdb {
 					provider_s::spt::FREQ, (void*)mWaterHanel)
 					->addReq("spec", "um", 0.2, 30000)->registerFunc(100);
 				auto pmIceHanel = provider_s::generate(
-					"mIceHanel", "water", 
+					"mIceHanel", "ice", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mIceHanel)
 					->addReq("spec", "um", 0.2, 30000)->registerFunc(100);
@@ -149,15 +149,21 @@ namespace scatdb {
 		}
 
 		all_providers_p listAllProviders() {
+			if (!implementations::allProvidersSet) implementations::_init();
+			if (implementations::allProvidersSet->size() == 0) implementations::_init();
 			return implementations::allProvidersSet;
 		}
 		all_providers_p listAllProviders(const std::string &subst) {
 			all_providers_p emptyres;
+			if (!implementations::allProvidersSet) implementations::_init();
+			if (implementations::allProvidersSet->size() == 0) implementations::_init();
 			if (!implementations::providersSet.count(subst)) return emptyres;
 			all_providers_p pss = implementations::providersSet.at(subst);
 			return pss;
 		}
 		void enumProvider(provider_p p, std::ostream &out) {
+			if (!p) SDBR_throw(error::error_types::xNullPointer)
+				.add<std::string>("Reason", "The pointer passed to this function was NULL!");
 			out << "Provider:\t" << p->name << "\n"
 				<< "\tSubstance:\t" << p->substance << "\n"
 				<< "\tSource:\t" << p->source << "\n"
@@ -173,6 +179,10 @@ namespace scatdb {
 			}
 		}
 		void enumProviders(all_providers_p p, std::ostream &out) {
+			if (!p) SDBR_throw(error::error_types::xNullPointer)
+				.add<std::string>("Reason", "The pointer passed to this function was NULL!");
+			if (p->size() == 1) out << "Providers found: 1\n";
+			else out << "Providers enumerated: " << p->size() << "\n";
 			for (const auto &i : *(p.get())) {
 				enumProvider(i.second, out);
 			}
@@ -181,6 +191,7 @@ namespace scatdb {
 		provider_p findProvider(const std::string &subst,
 			bool haveFreq, bool haveTemp, const std::string & start) {
 			provider_p emptyres;
+			if (!implementations::allProvidersSet) implementations::_init();
 			if (implementations::allProvidersSet->size() == 0) implementations::_init();
 
 			if (implementations::providersByName.count(subst)) {
@@ -214,7 +225,7 @@ namespace scatdb {
 		all_providers_p findProviders(const std::string &subst,
 			bool haveFreq, bool haveTemp) {
 			all_providers_mp res(new provider_collection_type);
-
+			if (!implementations::allProvidersSet) implementations::_init();
 			if (implementations::allProvidersSet->size() == 0) implementations::_init();
 			
 			if (implementations::providersByName.count(subst)) {
@@ -223,7 +234,11 @@ namespace scatdb {
 					SDBR_throw(scatdb::error::error_types::xBadFunctionMap)
 						.add<std::string>("Reason", "Attempting to find the provider for a manually-"
 							"specified refractive index formula, but the retrieved formula's "
-							"requirements do not match what whas passed.")
+							"requirements do not match what was passed.")
+						.add<bool>("Have-Freq", haveFreq)
+						.add<bool>("Need-Freq", (bool) cres->reqs.count("spec"))
+						.add<bool>("Have-Temp", haveTemp)
+						.add<bool>("Need-Temp", (bool)cres->reqs.count("temp"))
 						.add<std::string>("Provider", subst);
 				}
 				res->insert(std::pair<int, provider_p>(0, cres));

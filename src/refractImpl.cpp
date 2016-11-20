@@ -392,11 +392,11 @@ void scatdb::refract::implementations::mIceMatzler(double f, double t, std::comp
 
 void scatdb::refract::implementations::mIceWarren(double f, double t, std::complex<double> &m)
 {
-	if (f < 0.167 || f > 8600 || t > 272.15 || t < 213.15)
+	if (f < 0.167 || f > 8600 || t > -1 || t < -60)
 		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 		.add<double>("Frequency (GHz)", f)
-		.add<double>("Temperature (K)", t)
-		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0.167,8600), and allowed temp. range is 213 - 272 K.");
+		.add<double>("Temperature (degC)", t)
+		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0.167,8600), and allowed temp. range is -60 - -1 deg C.");
 
 	// Warren table 2 is used for interpolation
 	static bool setup = false;

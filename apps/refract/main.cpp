@@ -36,10 +36,10 @@ int main(int argc, char** argv) {
 
 		po::positional_options_description p;
 		p.add("subst", 1);
-		p.add("freq", 2);
-		p.add("freq-units", 3);
-		p.add("temp", 4);
-		p.add("temp-units", 5);
+		p.add("freq", 1);
+		p.add("freq-units", 1);
+		p.add("temp", 1);
+		p.add("temp-units", 1);
 
 		desc.add(cmdline).add(config);
 		oall.add(cmdline).add(config).add(hidden);

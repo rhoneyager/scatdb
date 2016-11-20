@@ -28,3 +28,4 @@ then an error message is presented.
 
 The input quantity, input units and output units options are also positional.
 So, the command `scatdb-units 10 m um` will convert 10 meters to micrometers.
+**Note: Negative quantities will mess up the positional parsing. In these cases, specify the input value with -i.**
