@@ -179,6 +179,7 @@ set( scatdb_srcs
 	${scatdb_units}
 	README.md
 	changelog.md
+	dbformat.md
 	INSTALL.md
 	"${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake-settings.h"
