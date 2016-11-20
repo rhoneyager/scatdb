@@ -1,4 +1,5 @@
 2016-11-20 - Version 2.0.1
+
 - Added the rest of the scatdb interface functions in C.
   Fortran interface will come later.
 - Fixed build system so that Clang gets the right compiler flags.
@@ -10,4 +11,4 @@
 
 2016-11-08 - Version 2.0.0 - alpha release. Commit 302de5f
 
-Initial release!
+- Initial release!
