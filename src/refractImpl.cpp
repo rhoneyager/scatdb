@@ -295,11 +295,11 @@ namespace {
 // Valid from 0 to 1000 GHz. freq in GHz, temp in K
 void scatdb::refract::implementations::mWaterLiebe(double f, double t, std::complex<double> &m)
 {
-	if (f < 0 || f > 1000)
+	if (f < 0 || f > 1000 || t > 273.15)
 		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 		.add<double>("Frequency (GHz)", f)
 		.add<double>("Temperature (K)", t)
-		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,1000)");
+		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,1000), and allowed temp. range is <= 273.15 K.");
 
 	double theta1 = 1.0 - (300.0 / t);
 	double eps0 = 77.66 - (103.3*theta1);
@@ -319,11 +319,11 @@ void scatdb::refract::implementations::mWaterLiebe(double f, double t, std::comp
 
 void scatdb::refract::implementations::mWaterFreshMeissnerWentz(double f, double tK, std::complex<double> &m)
 {
-	if (f < 0 || f > 500)
+	if (f < 0 || f > 500 || tK < 273.15)
 		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 		.add<double>("Frequency (GHz)", f)
 		.add<double>("Temperature (K)", tK)
-		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,500)");
+		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,500), and temp. must be >= 273.15 K.");
 
 	const double as[11] = {
 		5.7230, 0.022379, -0.00071237, 5.0478,
@@ -363,6 +363,12 @@ void scatdb::refract::implementations::mWaterFreshMeissnerWentz(double f, double
 
 void scatdb::refract::implementations::mIceMatzler(double f, double t, std::complex<double> &m)
 {
+	if (f < 0 || f > 1000 || t > 273.15)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Frequency (GHz)", f)
+		.add<double>("Temperature (K)", t)
+		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0,1000), and allowed temp. range is <= 273.15 K.");
+
 	double er = 0;
 	if (t>243.0)
 		er = 3.1884 + 9.1e-4*(t - 273.0);
@@ -386,6 +392,12 @@ void scatdb::refract::implementations::mIceMatzler(double f, double t, std::comp
 
 void scatdb::refract::implementations::mIceWarren(double f, double t, std::complex<double> &m)
 {
+	if (f < 0.167 || f > 8600 || t > 272.15 || t < 213.15)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Frequency (GHz)", f)
+		.add<double>("Temperature (K)", t)
+		.add<std::string>("Reason", "Allowed freq. range (GHz) is (0.167,8600), and allowed temp. range is 213 - 272 K.");
+
 	// Warren table 2 is used for interpolation
 	static bool setup = false;
 	static std::vector<double> tempCs, wavelengths;
@@ -507,6 +519,11 @@ void scatdb::refract::implementations::mIceWarren(double f, double t, std::compl
 
 void scatdb::refract::implementations::mWaterHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 30000)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,30000).");
+
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::WATER_RE)->interp(args),
 		-1.0 * setupHanelA(hanelAmedium::WATER_IM)->interp(args));
@@ -515,6 +532,11 @@ void scatdb::refract::implementations::mWaterHanel(double lambda, std::complex<d
 
 void scatdb::refract::implementations::mIceHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 30000)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,30000).");
+
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::ICE_RE)->interp(args),
 		-1.0 * setupHanelA(hanelAmedium::ICE_IM)->interp(args));
@@ -523,6 +545,11 @@ void scatdb::refract::implementations::mIceHanel(double lambda, std::complex<dou
 
 void scatdb::refract::implementations::mNaClHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 30000)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,30000).");
+
 	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::NACL_RE)->interp(args),
@@ -532,6 +559,10 @@ void scatdb::refract::implementations::mNaClHanel(double lambda, std::complex<do
 
 void scatdb::refract::implementations::mSeaSaltHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 30000)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,30000).");
 	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelA(hanelAmedium::SEASALT_RE)->interp(args),
@@ -541,6 +572,10 @@ void scatdb::refract::implementations::mSeaSaltHanel(double lambda, std::complex
 
 void scatdb::refract::implementations::mDustHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 300)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,300).");
 	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelB(hanelBmedium::DUST_LIKE_RE)->interp(args),
@@ -550,6 +585,10 @@ void scatdb::refract::implementations::mDustHanel(double lambda, std::complex<do
 
 void scatdb::refract::implementations::mSandOHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 300)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,300).");
 	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelB(hanelBmedium::SAND_O_RE)->interp(args),
@@ -559,6 +598,10 @@ void scatdb::refract::implementations::mSandOHanel(double lambda, std::complex<d
 
 void scatdb::refract::implementations::mSandEHanel(double lambda, std::complex<double> &m)
 {
+	if (lambda < 0.2 || lambda > 300)
+		SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
+		.add<double>("Wavelength (um)", lambda)
+		.add<std::string>("Reason", "Allowed wavelength range (um) is (0.2,300).");
 	//double wvlen = scatdb::units::conv_spec("GHz", "mm").convert(f);
 	array<double, 1> args = { lambda };
 	m = std::complex<double>(setupHanelB(hanelBmedium::SAND_E_RE)->interp(args),
