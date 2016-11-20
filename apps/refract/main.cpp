@@ -25,16 +25,21 @@ int main(int argc, char** argv) {
 
 		cmdline.add_options()
 			("help,h", "produce help message")
-			("input,i", po::value< double >(), "Input quantity")
-			("input-units,u", po::value< string >(), "Input units")
-			("output-units,o", po::value< string >(), "Output units")
-			("spec", "Perform spectral interconversion.")
+			("list-all", "List all refractive index providers")
+			("list-subst", po::value<string>(), "List all refractive index providers for a given substance")
+			("subst", po::value<string>(), "Substance of interest (ice, water)")
+			("freq,f", po::value<double>(), "Frequency")
+			("freq-units", po::value<string>()->default_value("GHz"), "Frequency units")
+			("temp,T", po::value<double>(), "Temperature")
+			("temp-units", po::value<string>()->default_value("K"), "Temperature units")
 			;
 
 		po::positional_options_description p;
-		p.add("input", 1);
-		p.add("input-units", 2);
-		p.add("output-units", 3);
+		p.add("subst", 1);
+		p.add("freq", 2);
+		p.add("freq-units", 3);
+		p.add("temp", 4);
+		p.add("temp-units", 5);
 
 		desc.add(cmdline).add(config);
 		oall.add(cmdline).add(config).add(hidden);
@@ -46,76 +51,75 @@ int main(int argc, char** argv) {
 
 		scatdb::debug::process_static_options(vm);
 
-		if (vm.count("help")) {
-			cerr << desc << "\n";
-			return 1;
-		}
+		auto doHelp = [&](const std::string &m) { cerr << desc << "\n" << m << endl; exit(1); };
+		if (vm.count("help") || argc < 2) doHelp("");
 
-		double inVal, outVal;
-		string inUnits, outUnits;
-		bool isSpec = false;
+		if (vm.count("list-all")) {
+			auto ps = scatdb::refract::listAllProviders();
+			scatdb::refract::enumProviders(ps);
+			return 0;
+		}
+		if (vm.count("list-subst")) {
+			string lsubst = vm["list-subst"].as<string>();
+			auto ps = scatdb::refract::listAllProviders(lsubst);
+			scatdb::refract::enumProviders(ps);
+			return 0;
+		}
+		if (!vm.count("subst")) doHelp("Must specify a substance.");
+		string subst = vm["subst"].as<string>();
+		string freqUnits = vm["freq-units"].as<string>();
+		string tempUnits = vm["temp-units"].as<string>();
+		bool hasFreq = false, hasTemp = false;
+		double inFreq = 0, inTemp = 0;
+		if (vm.count("freq")) { hasFreq = true; inFreq = vm["freq"].as<double>(); }
+		if (vm.count("temp")) { hasTemp = true; inTemp = vm["temp"].as<double>(); }
+		complex<double> m(0, 0);
 
-		if (vm.count("spec")) isSpec = true;
-		if (vm.count("input")) inVal = vm["input"].as<double>();
-		else {
-			std::string temp;
-			cout << "Specify input number (without units): ";
-			std::getline(cin, temp);
-			try {
-				inVal = boost::lexical_cast<double>(temp);
-			}
-			catch (boost::bad_lexical_cast) {
-				SDBR_throw(scatdb::error::error_types::xBadInput)
-					.add<std::string>("Reason", "Cannot parse input number")
-					.add<string>("Input _Number_", temp);
-			}
-		}
-		if (vm.count("input-units")) inUnits = vm["input-units"].as<string>();
-		else {
-			cout << "Specify input units (terminate with 'enter'): ";
-			std::getline(cin, inUnits);
-		}
-		if (vm.count("output-units")) outUnits = vm["output-units"].as<string>();
-		else{
-			cout << "Specify output units (terminate with 'enter'): ";
-			std::getline(cin, outUnits);
-		}
-		if ((!vm.count("input") || !vm.count("input-units") || !vm.count("output-units")) & !isSpec) {
-			cout << "Is this a spectral unit conversion (i.e. GHz to mm) [no]? ";
-			string temp;
-			std::getline(cin, temp);
-			if (temp.size()) {
-				char c = temp.at(0);
-				switch (c) {
-				case 'N': case 'n': case 'f': case 'F': case '0':
-					isSpec = false;
-					break;
-				case 'Y': case 'y': case 't': case 'T': case '1':
-					isSpec = true;
-					break;
-				default:
-					SDBR_throw(scatdb::error::error_types::xBadInput)
-						.add<std::string>("Reason", "Cannot parse boolean")
-						.add<string>("Input _Bool_", temp);
-					break;
+		// If an exact provider is specified by name, only a single entry is returned.
+		// Otherwise, all possible matches are returned.
+		auto provAll = scatdb::refract::findProviders(subst, hasFreq, hasTemp);
+		// Iterate until a provider works.
+		bool found = false;
+		string prov;
+		for (const auto &p : *(provAll.get())) {
+			prov = p.second->name;
+			if (p.second->speciality_function_type == scatdb::refract::provider_s::spt::FREQTEMP) {
+				scatdb::refract::refractFunction_freq_temp_t f;
+				scatdb::refract::prepRefract(p.second, freqUnits, tempUnits, f);
+				if (f) {
+					try {
+						f(inFreq, inTemp, m);
+						found = true;
+						break;
+					}
+					catch (std::exception &e) { if (prov == subst) cerr << e.what(); } // Out of range
 				}
 			}
-			else isSpec = false;
+			else if (p.second->speciality_function_type == scatdb::refract::provider_s::spt::FREQ) {
+				scatdb::refract::refractFunction_freqonly_t f;
+				scatdb::refract::prepRefract(p.second, freqUnits, f);
+				if (f) {
+					try {
+						f(inFreq, m);
+						found = true;
+						break;
+					}
+					catch (std::exception &e) { if (prov == subst) cerr << e.what(); } // Out of range
+				}
+			}
+			else {
+				continue;
+			}
 		}
-
-		std::shared_ptr<scatdb::units::converter> cnv;
-
-		if (isSpec) {
-			cnv = std::shared_ptr<scatdb::units::converter>(new scatdb::units::conv_spec(inUnits, outUnits));
+		if (found) {
+			cout << m << "\twas found using provider " << prov << "." << endl;
 		}
 		else {
-			cnv = std::shared_ptr<scatdb::units::converter>(new scatdb::units::converter(inUnits, outUnits));
+			cerr << "A refractive index provider that could handle the input cannot be found." << endl;
+			return 3;
 		}
-		if (cnv->isValid()) {
-			outVal = cnv->convert(inVal);
-			cout << outVal << endl;
-		}
-		else cerr << "Conversion is invalid or unhandled." << endl;
+		//std::shared_ptr<scatdb::units::converter> cnv;
+		//cnv = std::shared_ptr<scatdb::units::converter>(new scatdb::units::converter(inUnits, outUnits));
 	}
 	catch (std::exception &e) {
 		cerr << "An exception has occurred: " << e.what() << endl;

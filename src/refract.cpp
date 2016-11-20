@@ -216,6 +216,20 @@ namespace scatdb {
 			all_providers_mp res(new provider_collection_type);
 
 			if (implementations::allProvidersSet->size() == 0) implementations::_init();
+			
+			if (implementations::providersByName.count(subst)) {
+				provider_p cres = implementations::providersByName.at(subst);
+				if ((cres->reqs.count("spec") && !haveFreq) || (cres->reqs.count("temp") && !haveTemp)) {
+					SDBR_throw(scatdb::error::error_types::xBadFunctionMap)
+						.add<std::string>("Reason", "Attempting to find the provider for a manually-"
+							"specified refractive index formula, but the retrieved formula's "
+							"requirements do not match what whas passed.")
+						.add<std::string>("Provider", subst);
+				}
+				res->insert(std::pair<int, provider_p>(0, cres));
+				return res;
+			}
+			
 			if (!implementations::providersSet.count(subst)) return res;
 			all_providers_p pss = implementations::providersSet.at(subst);
 			for (const auto &p : *(pss.get())) {
