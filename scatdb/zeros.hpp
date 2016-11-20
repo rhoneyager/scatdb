@@ -38,13 +38,13 @@ namespace scatdb {
 			if (i >= maxIter) SDBR_throw(scatdb::error::error_types::xModelOutOfRange)
 				.add<size_t>("maxIter", maxIter)
 				.add<double>("eps", eps)
-				.add<U>("guess_a", guess_a)
-				.add<U>("guess_b", guess_b)
-				.add<U>("xn",xn)
-				.add<U>("xn1",xn1)
-				.add<U>("xn2",xn2)
-				.add<U>("fxn1",fxn1)
-				.add<U>("fxn2",fxn2);
+				.template add<U>("guess_a", guess_a)
+				.template add<U>("guess_b", guess_b)
+				.template add<U>("xn",xn)
+				.template add<U>("xn1",xn1)
+				.template add<U>("xn2",xn2)
+				.template add<U>("fxn1",fxn1)
+				.template add<U>("fxn2",fxn2);
 			zero = xn;
 			return zero;
 		}

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <inttypes.h>
 #include "../../scatdb/scatdb.h"
 
 void printError() {
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
 
 	// Count the number of lines in the database
 	uint64_t numEntries = SDBR_getNumRows(hdb);
-	printf("The database has %lld rows.\n", numEntries);
+	printf("The database has %" PRIu64 " rows.\n", numEntries);
 
 	// Filter the database based on flake type
 	const char* fts = "3,4,5,6,20";
@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
 
 	// Summarize the database
 	// Get the size of the summary table
-	int64_t statsNumFloats = 0, statsNumBytes = 0, count = 0;
+	uint64_t statsNumFloats = 0, statsNumBytes = 0, count = 0;
 	SDBR_getStatsTableSize(&statsNumFloats, &statsNumBytes);
 	summaryTable = malloc((size_t) statsNumBytes);
 	if (!summaryTable) {
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 		retval = 6;
 		goto freeObjs;
 	}
-	printf("There are %lld points used to calculate the statistics.\n\n", count);
+	printf("There are %" PRIu64 " points used to calculate the statistics.\n\n", count);
 	for (int i=0; i<SDBR_NUM_DATA_ENTRIES_STATS; ++i) {
 		printf("\t%s", SDBR_stringifyStatsColumn(i));
 	}

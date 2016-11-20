@@ -50,7 +50,7 @@ namespace scatdb {
 					"mIceMatzler", "ice", 
 					"Thermal Microwave Radiation: Applications for Remote Sensing, "
 					"Chapter 5, Microwave dielectric properties of ice, "
-					"By Christian Mätzler(2006)",
+					"By Christian Matzler(2006)",
 					"",
 					provider_s::spt::FREQTEMP, (void*)mIceMatzler)
 					->addReq("spec", "GHz", 0, 1000)->addReq("temp", "K", 0, 273.15)->registerFunc();
@@ -104,7 +104,7 @@ namespace scatdb {
 		provider_mp provider_s::generate(
 			const std::string &name, const std::string &subst,
 			const std::string &source, const std::string &notes,
-			enum class provider_s::spt sv, void* ptr) {
+			provider_s::spt sv, void* ptr) {
 			provider_mp res(new provider_s);
 			res->name = name;
 			res->substance = subst;

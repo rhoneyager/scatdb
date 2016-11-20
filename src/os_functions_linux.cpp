@@ -100,38 +100,19 @@ namespace scatdb{
 				std::lock_guard<std::mutex> lock(m_sys_names);
 				if (username.size()) return username;
 
-				const size_t len = 256;
-				char hname[len];
-				int res = 0;
-				res = getlogin_r(hname, len);
-				if (res) {
-					char errbuf[len];
-					// strerror_r has awkward conventions.
-					char* errbufres = strerror_r(res, errbuf, len);
-					static const std::string serr("ERROR in getUsername");
+				auto hInfo = scatdb::debug::getProcessInfo(getPID());
+
+				if (hInfo->expandedEnviron.count("LOGNAME")) {
+					username = hInfo->expandedEnviron.at("LOGNAME");
 					SDBR_log("os_functions", scatdb::logging::NOTIFICATION,
-						"getUsername failed when directly trying to "
-						"determine the username using getlogin_r. "
-						"The error code was " << res
-						<< ", which means: " << errbufres  << ". Will try "
-						"to use the LOGNAME environment variable.");
-					// Try again by reading the LOGNAME environment variable.
-					auto hInfo = scatdb::debug::getProcessInfo(getPID());
-
-					if (hInfo->expandedEnviron.count("LOGNAME")) {
-						username = hInfo->expandedEnviron.at("LOGNAME");
-						SDBR_log("os_functions", scatdb::logging::NOTIFICATION,
-							"getUsername succeeded by reading LOGNAME.");
-					} else { 
-						username = serr;
-						SDBR_log("os_functions", scatdb::logging::ERROR,
-							"getUsername failed to determine the username."
-							);
-
-					}
-				} else {
-					username = std::string(hname);
+						"getUsername succeeded by reading LOGNAME.");
+				} else { 
+					username = "UNKNOWN";
+					SDBR_log("os_functions", scatdb::logging::ERROR,
+						"getUsername failed to determine the username."
+						);
 				}
+
 
 				return username;
 			}
@@ -145,7 +126,7 @@ namespace scatdb{
 				char hname[len];
 				int res = 0;
 				res = gethostname(hname, len);
-				if (hname)
+				if (hname[0] != '\0')
 					hostname = std::string(hname);
 
 				return hostname;

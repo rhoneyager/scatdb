@@ -70,7 +70,7 @@ namespace scatdb {
 			const std::string &inUnits, const std::string &outUnits) {
 			implementations::_init(); // Static function that registers the builtin unit converters.
 
-			auto &hooks = implementations::getHooks();
+			const auto &hooks = implementations::getHooks();
 			//	hull_provider_registry, hull_provider<convexHull> >::getHooks();
 			//std::cerr << hooks->size() << std::endl;
 			auto opts = scatdb::registry::options::generate();

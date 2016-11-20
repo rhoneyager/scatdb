@@ -56,7 +56,7 @@ namespace scatdb {
 			static provider_mp generate(
 				const std::string &name, const std::string &subst,
 				const std::string &source, const std::string &notes,
-				enum class provider_s::spt sv, void* ptr);
+				provider_s::spt sv, void* ptr);
 		};
 		typedef std::multimap<int, provider_p> provider_collection_type;
 		typedef std::shared_ptr<const provider_collection_type > all_providers_p;
