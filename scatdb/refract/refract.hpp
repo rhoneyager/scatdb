@@ -3,6 +3,7 @@
 #pragma warning( disable : 4003 ) // Bug in boost with VS2016.3
 #include <complex>
 #include <functional>
+#include <iostream>
 #include <map>
 #include <string>
 #include <vector>
@@ -44,7 +45,7 @@ namespace scatdb {
 			std::map<std::string, requirement_p> reqs;
 			provider_mp addReq(const std::string &name, const std::string &units,
 				double low, double high);
-			provider_mp registerFunc();
+			provider_mp registerFunc(int priority = 0);
 			enum class spt {
 				NONE,
 				FREQ,
@@ -57,14 +58,20 @@ namespace scatdb {
 				const std::string &source, const std::string &notes,
 				enum class provider_s::spt sv, void* ptr);
 		};
-		typedef std::shared_ptr<const std::vector<provider_p> > all_providers_p;
-		typedef std::shared_ptr<std::vector<provider_p> > all_providers_mp;
+		typedef std::multimap<int, provider_p> provider_collection_type;
+		typedef std::shared_ptr<const provider_collection_type > all_providers_p;
+		typedef std::shared_ptr<provider_collection_type > all_providers_mp;
 
 		typedef std::function<void(double, std::complex<double>&)> refractFunction_freqonly_t;
 		typedef std::function<void(double, double, std::complex<double>&)> refractFunction_freq_temp_t;
 
+		DLEXPORT_SDBR all_providers_p listAllProviders();
+		DLEXPORT_SDBR all_providers_p listAllProviders(const std::string &subst);
+		DLEXPORT_SDBR void enumProvider(provider_p p, std::ostream &out = std::cerr);
+		DLEXPORT_SDBR void enumProviders(all_providers_p p, std::ostream &out = std::cerr);
+
 		DLEXPORT_SDBR provider_p findProvider(const std::string &subst,
-			bool haveFreq = true, bool haveTemp = true);
+			bool haveFreq = true, bool haveTemp = true, const std::string &startAt = "");
 
 		DLEXPORT_SDBR void prepRefract(provider_p, const std::string &inFreqUnits,
 			refractFunction_freqonly_t&);

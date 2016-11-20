@@ -22,10 +22,15 @@ namespace scatdb {
 	namespace refract {
 		namespace implementations {
 			std::mutex m_refracts;
+			all_providers_mp allProvidersSet;
+			std::map<std::string, all_providers_mp> providersSet;
+			std::map<std::string, provider_mp> providersByName;
 			void _init() {
 				std::lock_guard<std::mutex> lock(m_refracts);
 				static bool inited = false;
 				if (inited) return;
+				allProvidersSet = all_providers_mp(new provider_collection_type);
+
 				std::shared_ptr<std::map<std::string, provider_p> > data(
 					new std::map<std::string, provider_p>);
 
@@ -59,43 +64,41 @@ namespace scatdb {
 					"mWaterHanel", "water", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mWaterHanel)
-					->addReq("spec", "um", 0.2, 30000)->registerFunc();
+					->addReq("spec", "um", 0.2, 30000)->registerFunc(100);
 				auto pmIceHanel = provider_s::generate(
 					"mIceHanel", "water", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mIceHanel)
-					->addReq("spec", "um", 0.2, 30000)->registerFunc();
+					->addReq("spec", "um", 0.2, 30000)->registerFunc(100);
 
 				auto pmNaClHanel = provider_s::generate(
 					"mNaClHanel", "NaCl", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mNaClHanel)
-					->addReq("spec", "um", 0.2, 30000)->registerFunc();
+					->addReq("spec", "um", 0.2, 30000)->registerFunc(100);
 				auto pmSeaSaltHanel = provider_s::generate(
 					"mSeaSaltHanel", "SeaSalt", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mSeaSaltHanel)
-					->addReq("spec", "um", 0.2, 30000)->registerFunc();
+					->addReq("spec", "um", 0.2, 30000)->registerFunc(100);
 				auto pmDustHanel = provider_s::generate(
 					"mDustHanel", "Dust", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mDustHanel)
-					->addReq("spec", "um", 0.2, 300)->registerFunc();
+					->addReq("spec", "um", 0.2, 300)->registerFunc(100);
 				auto pmSandOHanel = provider_s::generate(
 					"mSandOHanel", "Sand_O", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mSandOHanel)
-					->addReq("spec", "um", 0.2, 300)->registerFunc();
+					->addReq("spec", "um", 0.2, 300)->registerFunc(100);
 				auto pmSandEHanel = provider_s::generate(
 					"mSandEHanel", "Sand_E", 
 					"Tables from Thomas Hanel. Not sure which paper.", "",
 					provider_s::spt::FREQ, (void*)mSandEHanel)
-					->addReq("spec", "um", 0.2, 300)->registerFunc();
+					->addReq("spec", "um", 0.2, 300)->registerFunc(100);
 
 				inited = true;
 			}
-
-			std::map<std::string, all_providers_mp> providersSet;
 		}
 
 		provider_mp provider_s::generate(
@@ -118,16 +121,18 @@ namespace scatdb {
 			reqs[name] = newreq;
 			return res;
 		}
-		provider_mp provider_s::registerFunc() {
+		provider_mp provider_s::registerFunc(int priority) {
 			provider_mp res = this->shared_from_this();
 			all_providers_mp block;
 			if (implementations::providersSet.count(substance))
 				block = implementations::providersSet.at(substance);
 			else {
-				block = all_providers_mp(new std::vector<provider_p>);
+				block = all_providers_mp(new provider_collection_type);
 				implementations::providersSet[substance] = block;
 			}
-			block->push_back(res);
+			block->insert(std::pair<int,provider_mp>(priority,res));
+			implementations::allProvidersSet->insert(std::pair<int, provider_mp>(priority, res));
+			implementations::providersByName[res->name] = res;
 			return res;
 		}
 		provider_s::provider_s() {}
@@ -143,16 +148,66 @@ namespace scatdb {
 			return res;
 		}
 
-		provider_p findProvider(const std::string &subst,
-			bool haveFreq, bool haveTemp) {
-			provider_p emptyres;
-			if (implementations::providersSet.count(subst) == 0) implementations::_init();
-			all_providers_mp pss = implementations::providersSet.at(subst);
-			for (const auto &p : *(pss.get())) {
-				if (p->reqs.count("spec") && !haveFreq) continue;
-				if (p->reqs.count("temp") && !haveTemp) continue;
+		all_providers_p listAllProviders() {
+			return implementations::allProvidersSet;
+		}
+		all_providers_p listAllProviders(const std::string &subst) {
+			all_providers_p emptyres;
+			if (!implementations::providersSet.count(subst)) return emptyres;
+			all_providers_p pss = implementations::providersSet.at(subst);
+			return pss;
+		}
+		void enumProvider(provider_p p, std::ostream &out) {
+			out << "Provider:\t" << p->name << "\n"
+				<< "\tSubstance:\t" << p->substance << "\n"
+				<< "\tSource:\t" << p->source << "\n"
+				<< "\tNotes:\t" << p->notes << "\n";
+			if (p->reqs.size()) {
+				out << "\tRequirements:\n";
+				for (const auto &r : p->reqs) {
+					out << "\t\tParameter:\t" << r.first
+						<< "\t\t\tRange:\t" << r.second->validRange.first << " - "
+						<< r.second->validRange.second << " "
+						<< r.second->parameterUnits << "\n";
+				}
+			}
+		}
+		void enumProviders(all_providers_p p, std::ostream &out) {
+			for (const auto &i : *(p.get())) {
+				enumProvider(i.second, out);
+			}
+		}
 
-				return p;
+		provider_p findProvider(const std::string &subst,
+			bool haveFreq, bool haveTemp, const std::string & start) {
+			provider_p emptyres;
+			if (implementations::allProvidersSet->size() == 0) implementations::_init();
+
+			if (implementations::providersByName.count(subst)) {
+				provider_p cres = implementations::providersByName.at(subst);
+				if ((cres->reqs.count("spec") && !haveFreq) || (cres->reqs.count("temp") && !haveTemp)) {
+					SDBR_throw(scatdb::error::error_types::xBadFunctionMap)
+						.add<std::string>("Reason", "Attempting to find the provider for a manually-"
+							"specified refractive index formula, but the retrieved formula's "
+							"requirements do not match what whas passed.")
+						.add<std::string>("Provider", subst);
+				}
+				return cres;
+			}
+
+			if (!implementations::providersSet.count(subst)) return emptyres;
+			all_providers_mp pss = implementations::providersSet.at(subst);
+			bool startSearch = false;
+			if (start == "") startSearch = true;
+			for (const auto &p : *(pss.get())) {
+				if (!startSearch) {
+					if (p.second->name == start) startSearch = true;
+					continue;
+				} else {
+					if (p.second->reqs.count("spec") && !haveFreq) continue;
+					if (p.second->reqs.count("temp") && !haveTemp) continue;
+				}
+				return p.second;
 			}
 			return emptyres;
 		}
