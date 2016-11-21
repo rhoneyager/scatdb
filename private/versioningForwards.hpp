@@ -3,7 +3,7 @@
 #include <memory>
 #include <cstdint>
 #include <string>
-#include "hashForwards.hpp"
+#include "../scatdb/hashForwards.hpp"
 
 namespace scatdb {
 	namespace versioning {
@@ -18,7 +18,7 @@ namespace scatdb {
 
 		/// Internal scatdb version
 		DLEXPORT_SDBR void getLibVersionInfo(versionInfo &out);
-		DLEXPORT_SDBR void getHashOfVersionInfo(const versionInfo&, hash::HASH_t &out);
+		DLEXPORT_SDBR hash::HASH_p getHashOfVersionInfo(const versionInfo&);
 		DLEXPORT_SDBR versionInfo_p getLibVersionInfo();
 
 	}

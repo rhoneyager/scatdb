@@ -1,15 +1,14 @@
 #pragma once
 #pragma warning( disable : 4251 ) // dll-interface
-#include "defs.hpp"
+#include "../defs.hpp"
 #include <memory>
 #include <Eigen/Dense>
-#include "hash.hpp"
+#include "../hashForwards.hpp"
 #include "shapeForwards.hpp"
-#include "ingestForwards.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace shape {
-		class Ryan_Scat_DL shape
+		class DLEXPORT_SDBR shape
 			{
 		private:
 			shape();
@@ -29,8 +28,6 @@ namespace Ryan_Scat {
 			void setDescription(const std::string&);
 			double getPreferredDipoleSpacing() const;
 			void setPreferredDipoleSpacing(double);
-			ingest_ptr getIngestInformation() const;
-			void setIngestInformation(const ingest_ptr);
 			void getTags(tags_t&) const;
 			void setTags(const tags_t&);
 			shapeHeaderStorage_p getHeader() const;
@@ -38,7 +35,7 @@ namespace Ryan_Scat {
 			shapePointStatsStorage_p getStats() const;
 			void getStats(shapePointStatsStorage_p) const;
 			void getStats(shapePointStatsStorage_t&) const;
-			hash::HASH_t hash() const;
+			hash::HASH_p hash() const;
 			cache_t cache() const;
 		};
 	}

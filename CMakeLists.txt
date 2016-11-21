@@ -99,8 +99,8 @@ SET(scatdb_debug
 	src/errorTypes.cpp
 	scatdb/errorTypes.hpp
 	src/hash.cpp
-	private/hash.hpp
-	private/hashForwards.hpp
+	scatdb/hash.hpp
+	scatdb/hashForwards.hpp
 	private/info.hpp
 	private/info_fwd.hpp
 	src/logging.cpp
@@ -141,7 +141,7 @@ SET(scatdb_main
 set(scatdb_shape
 	src/shape.cpp
 	src/shapeIOtext.cpp
-	src/shapeIOtextParses.cpp
+	src/shapeIOtextParsers.cpp
 	scatdb/shape/shape.hpp
 	scatdb/shape/shapeAlgs.hpp
 	scatdb/shape/shapeForwards.hpp
@@ -176,6 +176,7 @@ set( scatdb_srcs
 	${scatdb_debug}
 	${scatdb_os}
 	${scatdb_refract}
+	${scatdb_shape}
 	${scatdb_units}
 	README.md
 	changelog.md

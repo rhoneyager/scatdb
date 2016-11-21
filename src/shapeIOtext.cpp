@@ -6,19 +6,16 @@
 #include <iomanip>
 #include <cstdio>
 
-#include "../Ryan_Scat/io.hpp"
-#include "../Ryan_Scat/error.hpp"
-#include "../Ryan_Scat/plugin.hpp"
-#include "../Ryan_Scat/shape.hpp"
-#include "../Ryan_Scat/shapeIO.hpp"
+#include "../scatdb/error.hpp"
+#include "../scatdb/shape/shape.hpp"
 #include "../private/shapeIOtext.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace plugins {
 		namespace builtin {
 			namespace shape {
 				using namespace Ryan_Scat::registry;
-				const char* PLUGINID = "Ryan_Scat::plugins::builtin::shape";
+				const char* PLUGINID = "scatdb::plugins::builtin::shape";
 				struct shape_text_handle : public Ryan_Scat::registry::IOhandler
 				{
 					shape_text_handle(const char* filename, IOtype t) : IOhandler(PLUGINID) {
