@@ -140,9 +140,11 @@ SET(scatdb_main
 	)
 set(scatdb_shape
 	src/shape.cpp
+	src/shapeIO.cpp
 	src/shapeIOtext.cpp
 	src/shapeIOtextParsers.cpp
 	scatdb/shape/shape.hpp
+	scatdb/shape/shapeIO.hpp
 	scatdb/shape/shapeAlgs.hpp
 	scatdb/shape/shapeForwards.hpp
 	private/shapeBackend.hpp
