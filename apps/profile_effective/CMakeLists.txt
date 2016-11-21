@@ -3,6 +3,7 @@ ADD_LIBRARY (scatdb_profile_base STATIC
 	output.cpp
 	parser.cpp
 	parser.hpp
+	README.md
 	)
 
 ADD_EXECUTABLE(scatdb_profile_parse
