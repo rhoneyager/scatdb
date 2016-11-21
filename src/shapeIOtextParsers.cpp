@@ -12,7 +12,7 @@
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/include/phoenix_stl.hpp>
-#include "../scatdb/macros.hpp"
+//#include "../scatdb/macros.hpp"
 #include "../scatdb/shape/shape.hpp"
 #include "../scatdb/shape/shapeForwards.hpp"
 #include "../private/shapeIOtext.hpp"
@@ -93,7 +93,7 @@ namespace scatdb
 		{
 			namespace shape {
 				void readDDSCAT(std::shared_ptr<::scatdb::shape::shape> s,
-					std::istream &in, std::shared_ptr<registry::options> opts)
+					std::istream &in)
 				{
 					std::ostringstream so;
 					boost::iostreams::copy(in, so);
@@ -107,10 +107,10 @@ namespace scatdb
 					readHeader(str.c_str(), desc, numPoints, hdr, headerEnd);
 					data->resize((int)numPoints, ::scatdb::shape::backends::NUM_SHAPECOLS);
 					readTextContents(str.c_str(), headerEnd, data);
-					auto ing = scatdb::generateIngest();
+					//auto ing = scatdb::generateIngest();
 					/// \todo Change ingest to show absolute path
-					ing->sources.push_back(opts->getVal<std::string>("filename", "Unknown file"));
-					s->setIngestInformation(ing);
+					//ing->sources.push_back(opts->getVal<std::string>("filename", "Unknown file"));
+					//s->setIngestInformation(ing);
 					s->setDescription(desc);
 					s->setHeader(hdr);
 					s->setPoints(data);
@@ -152,7 +152,9 @@ namespace scatdb
 							// Find first space after this position
 							posb = lin.find_first_of(" \t\n", posa);
 							size_t len = posb - posa;
-							np = macros::m_atoi<size_t>(&(lin.data()[posa]), len);
+							string s = lin.substr(posa, len);
+							np = boost::lexical_cast<size_t>(s);
+							//np = macros::m_atoi<size_t>(&(lin.data()[posa]), len);
 						}
 						break;
 						case 6: // Junk line
@@ -172,7 +174,9 @@ namespace scatdb
 								// Find first space after this position
 								posb = lin.find_first_of(" \t\n,", posa);
 								size_t len = posb - posa;
-								v(j) = macros::m_atof<float>(&(lin.data()[posa]), len);
+								string s = lin.substr(posa, len);
+								v(j) = boost::lexical_cast<float>(s);
+								//v(j) = macros::m_atof<float>(&(lin.data()[posa]), len);
 							}
 							hdr->block<3, 1>(0, i - 2) = v;
 							
@@ -197,12 +201,12 @@ namespace scatdb
 					parser_vals.reserve(numPoints * 8);
 					parse_shapefile_entries(pa, pb, parser_vals);
 
-					if (numPoints == 0) RSthrow(error::error_types::xBadInput)
+					if (numPoints == 0) SDBR_throw(error::error_types::xBadInput)
 						.add<std::string>("Reason", "Header indicates no dipoles.");
-					if (parser_vals.size() == 0) RSthrow(error::error_types::xBadInput)
+					if (parser_vals.size() == 0) SDBR_throw(error::error_types::xBadInput)
 						.add<std::string>("Reason", "Unable to parse dipoles.");
 					if (parser_vals.size() < (size_t) ((data->rows() - 1) * 7))
-						RSthrow(error::error_types::xBadInput)
+						SDBR_throw(error::error_types::xBadInput)
 						.add<std::string>("Reason", "When reading shapefile, "
 							"header dipoles do not match the number in the file.");
 

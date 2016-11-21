@@ -14,9 +14,9 @@ namespace scatdb {
 	namespace plugins {
 		namespace builtin {
 			namespace shape {
-				using namespace Ryan_Scat::registry;
+				using namespace scatdb::registry;
 				const char* PLUGINID = "scatdb::plugins::builtin::shape";
-				struct shape_text_handle : public Ryan_Scat::registry::IOhandler
+				struct shape_text_handle : public scatdb::registry::IOhandler
 				{
 					shape_text_handle(const char* filename, IOtype t) : IOhandler(PLUGINID) {
 						open(filename, t);
@@ -30,18 +30,18 @@ namespace scatdb {
 						{
 						case IOtype::EXCLUSIVE:
 						case IOtype::DEBUG:
-							RSthrow(Ryan_Scat::error::error_types::xOtherError)
+							SDBR_throw(scatdb::error::error_types::xOtherError)
 								.add<std::string>("Reason", "Unsupported IOtype")
 								.add<std::string>("filename", std::string(filename));
 							break;
 						case IOtype::READONLY:
-							if (!exists(path(filename))) RSthrow(Ryan_Scat::error::error_types::xMissingFile)
+							if (!exists(path(filename))) SDBR_throw(scatdb::error::error_types::xMissingFile)
 								.add<std::string>("filename", std::string(filename))
 								.add<std::string>("Reason", "Attempting to open a file for reading, but the file does not exist.");
 							in = std::shared_ptr<std::ifstream>(new std::ifstream(filename));
 							break;
 						case IOtype::CREATE:
-							if (exists(path(filename))) RSthrow(Ryan_Scat::error::error_types::xFileExists)
+							if (exists(path(filename))) SDBR_throw(scatdb::error::error_types::xFileExists)
 								.add<std::string>("filename", std::string(filename))
 								.add<std::string>("Reason", "Attempting to create a file, which already exists.");
 						case IOtype::TRUNCATE:
@@ -60,15 +60,15 @@ namespace scatdb {
 				void register_shape_text() {
 					const int nexts = 2;
 					const char *exts[nexts] = { "shp", "dat" };
-					genAndRegisterIOregistryPlural_writer<::Ryan_Scat::shape::shapeIO,
-						Ryan_Scat::shape::shape_IO_output_registry>(nexts, exts, PLUGINID);
-					genAndRegisterIOregistryPlural_reader<::Ryan_Scat::shape::shapeIO,
-						Ryan_Scat::shape::shape_IO_input_registry>(nexts, exts, PLUGINID);
+					genAndRegisterIOregistryPlural_writer<::scatdb::shape::shapeIO,
+						scatdb::shape::shape_IO_output_registry>(nexts, exts, PLUGINID);
+					genAndRegisterIOregistryPlural_reader<::scatdb::shape::shapeIO,
+						scatdb::shape::shape_IO_input_registry>(nexts, exts, PLUGINID);
 				}
 				std::shared_ptr<IOhandler> export_raw(std::shared_ptr<IOhandler> sh, std::shared_ptr<options> opts,
-					const std::shared_ptr<const ::Ryan_Scat::shape::shapeIO > s) {
+					const std::shared_ptr<const ::scatdb::shape::shapeIO > s) {
 					auto h = prepHandle<shape_text_handle>(sh, opts, std::string(PLUGINID));
-					if (!h->out) RSthrow(Ryan_Scat::error::error_types::xOtherError)
+					if (!h->out) SDBR_throw(scatdb::error::error_types::xOtherError)
 						.add<std::string>("Reason", "Output stream not set. Wrong handle opening io type!");
 					std::string delim = opts->getVal<std::string>("delimiter", "\t");
 					for (const auto &i : s->shapes) {
@@ -86,7 +86,7 @@ namespace scatdb {
 						char* cur = buf.get();
 						// Using the printf-based functions, since they are faster.
 						for (int i = 0; i < (int)numPts; ++i) {
-							const auto &b = pts->block<1, Ryan_Scat::shape::backends::NUM_SHAPECOLS>(i, 0);
+							const auto &b = pts->block<1, scatdb::shape::backends::NUM_SHAPECOLS>(i, 0);
 							long sl = sprintf_s(cur, srem, "%d%s%d%s%d%s%d%s%d%s%d%s%d\n",
 								(int)b(0), d, (int)b(1), d, (int)b(2), d, (int)b(3), d,
 								(int)b(4), d, (int)b(5), d, (int)b(6));
@@ -99,11 +99,11 @@ namespace scatdb {
 					return h;
 				}
 				std::shared_ptr<IOhandler> export_ddscat(std::shared_ptr<IOhandler> sh, std::shared_ptr<options> opts,
-					const std::shared_ptr<const ::Ryan_Scat::shape::shapeIO > s) {
+					const std::shared_ptr<const ::scatdb::shape::shapeIO > s) {
 					auto h = prepHandle<shape_text_handle>(sh, opts, std::string(PLUGINID));
-					if (!h->out) RSthrow(Ryan_Scat::error::error_types::xOtherError)
+					if (!h->out) SDBR_throw(scatdb::error::error_types::xOtherError)
 						.add<std::string>("Reason", "Output stream not set. Wrong handle opening io type!");
-					using namespace Ryan_Scat::shape::backends;
+					using namespace scatdb::shape::backends;
 					for (const auto &i : s->shapes) {
 						// Write header
 						*(h->out.get()) << i->getDescription() << std::endl;
@@ -134,7 +134,7 @@ namespace scatdb {
 						char* cur = buf.get();
 						// Using the printf-based functions, since they are faster.
 						for (int i = 0; i < (int)numPts; ++i) {
-							const auto &b = pts->block<1, Ryan_Scat::shape::backends::NUM_SHAPECOLS>(i, 0);
+							const auto &b = pts->block<1, scatdb::shape::backends::NUM_SHAPECOLS>(i, 0);
 							long sl = sprintf_s(cur, srem, "%*d%*d%*d%*d%*d%*d%*d\n",
 								-8, (int)b(0), -5, (int)b(1), -5, (int)b(2), -5, (int)b(3),
 								-5, (int)b(4), -5, (int)b(5), -5, (int)b(6));
@@ -154,16 +154,16 @@ namespace scatdb {
 	namespace registry {
 		template<>
 		std::shared_ptr<IOhandler>
-			write_file_type_multi<::Ryan_Scat::shape::shapeIO>
+			write_file_type_multi<::scatdb::shape::shapeIO>
 			(std::shared_ptr<IOhandler> sh, std::shared_ptr<options> opts,
-				const std::shared_ptr<const ::Ryan_Scat::shape::shapeIO > s)
+				const std::shared_ptr<const ::scatdb::shape::shapeIO > s)
 		{
 			std::string exporttype = opts->exportType();
 			/// \todo If no exporttype, attempt to guess from the file extension?
 			if (exporttype == "raw") return plugins::builtin::shape::export_raw(sh, opts, s);
 			else if (exporttype == "ddscat" || !exporttype.size()) return plugins::builtin::shape::export_ddscat(sh, opts, s);
 			//else if (exporttype == "adda") return plugins::builtin::shape::export_adda(sh, opts, s);
-			else RSthrow(Ryan_Scat::error::error_types::xUnimplementedFunction)
+			else SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
 				.add<std::string>("Reason", "Attempting to write a shape to a file, but the format specifier is not understood.")
 				.add<std::string>("Format", exporttype);
 			return nullptr;
@@ -171,9 +171,9 @@ namespace scatdb {
 
 		template<>
 		std::shared_ptr<IOhandler>
-			read_file_type_multi<::Ryan_Scat::shape::shapeIO>
+			read_file_type_multi<::scatdb::shape::shapeIO>
 			(std::shared_ptr<IOhandler> sh, std::shared_ptr<options> opts,
-				std::shared_ptr<::Ryan_Scat::shape::shapeIO > s)
+				std::shared_ptr<::scatdb::shape::shapeIO > s)
 		{
 			IOtype iotype = opts->getVal<IOtype>("iotype", IOtype::READONLY);
 			auto h = prepHandle<plugins::builtin::shape::shape_text_handle>
@@ -181,10 +181,10 @@ namespace scatdb {
 			
 			s->shapes.clear();
 
-			auto shp = ::Ryan_Scat::shape::shape::generate();
-			if (!h->in) RSthrow(Ryan_Scat::error::error_types::xOtherError)
+			auto shp = ::scatdb::shape::shape::generate();
+			if (!h->in) SDBR_throw(scatdb::error::error_types::xOtherError)
 				.add<std::string>("Reason", "Input stream not set. Wrong handle opening io type!");
-			Ryan_Scat::plugins::builtin::shape::readDDSCAT(shp, *(h->in.get()), opts);
+			scatdb::plugins::builtin::shape::readDDSCAT(shp, *(h->in.get()), opts);
 			s->shapes.push_back(shp);
 			return h;
 		}
