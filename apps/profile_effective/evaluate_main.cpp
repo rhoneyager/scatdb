@@ -362,7 +362,6 @@ int main(int argc, char** argv) {
 		string sout;
 		if (vm.count("output")) sout = vm["output"].as<string>();
 		else doHelp("Need to specify an output file");
-		scatdb::plugins::hdf5::useZLIB(true);
 		using namespace H5;
 		//Exception::dontPrint();
 		std::shared_ptr<H5::H5File> file;

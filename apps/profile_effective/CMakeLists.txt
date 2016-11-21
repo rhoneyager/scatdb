@@ -12,10 +12,10 @@ ADD_EXECUTABLE(scatdb_profile_parse
 ADD_EXECUTABLE(scatdb_profile_evaluate
 	evaluate_main.cpp
 	)
-target_link_libraries(scatdb_profile_base scatdb)
+target_link_libraries(scatdb_profile_base scatdb )
 addlib(scatdb_profile_base Profiles/Forward STATIC)
-target_link_libraries(scatdb_profile_parse scatdb_profile_base)
+target_link_libraries(scatdb_profile_parse scatdb_profile_base scatdb)
 addapp(scatdb_profile_parse Profiles/Forward)
-target_link_libraries(scatdb_profile_evaluate scatdb_profile_base)
+target_link_libraries(scatdb_profile_evaluate scatdb_profile_base scatdb)
 addapp(scatdb_profile_evaluate Profiles/Forward)
 

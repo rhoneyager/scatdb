@@ -165,7 +165,7 @@ namespace scatdb {
 		}
 
 #define SPEC_SPLITSET_A(T) \
-	template  void splitSet<T>(const T&, const T&, \
+	template DLEXPORT_SDBR void splitSet<T>(const T&, const T&, \
 	const T&, const std::string&, std::set<T> &);
 
 		//SPEC_SPLITSET_A(int);
@@ -238,7 +238,7 @@ namespace scatdb {
 		}
 
 #define SPEC_SPLITSET_INTERVAL(T) \
-	template  void extractInterval<T>( \
+	template DLEXPORT_SDBR void extractInterval<T>( \
 	const std::string&, T&, T&, T&, size_t&, std::string&);
 
 		//SPEC_SPLITSET_INTERVAL(int);
@@ -350,7 +350,7 @@ namespace scatdb {
 		}
 
 #define SPEC_SPLITSET(T) \
-	template  void splitSet<T>(const std::string &instr, std::set<T> &expanded, \
+	template DLEXPORT_SDBR void splitSet<T>(const std::string &instr, std::set<T> &expanded, \
 	const std::map<std::string, std::string> *aliases);
 
 		DOTYPES(SPEC_SPLITSET);
@@ -511,7 +511,7 @@ namespace scatdb {
 			return false;
 		}
 
-#define IMPL_INTS(T) template class  intervals < T >;
+#define IMPL_INTS(T) template class DLEXPORT_SDBR intervals < T >;
 		DOTYPES(IMPL_INTS);
 	}
 }
