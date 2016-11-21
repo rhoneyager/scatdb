@@ -1,10 +1,11 @@
 #include <map>
 
-#include "../Ryan_Scat/error.hpp"
-#include "../Ryan_Scat/shape.hpp"
+#include "../scatdb/error.hpp"
+#include "../scatdb/hash.hpp"
+#include "../scatdb/shape/shape.hpp"
 #include "../private/shapeBackend.hpp"
 
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace shape {
 		shape::shape() { p = std::shared_ptr<shapeBackend>(new shapeBackend); }
 		shape::~shape() {}
@@ -16,25 +17,25 @@ namespace Ryan_Scat {
 			data = std::shared_ptr<shapeStorage_t>(new shapeStorage_t);
 			ptsonly = std::shared_ptr<shapePointsOnly_t>(new shapePointsOnly_t);
 			//curHash = genHash();
-			ingest = ::Ryan_Scat::generateIngest();
+			//ingest = ::scatdb::generateIngest();
 			stats = std::shared_ptr<shapePointStatsStorage_t>(new shapePointStatsStorage_t);
 			header = std::shared_ptr<shapeHeaderStorage_t>(new shapeHeaderStorage_t);
 			cache = cache_t(new std::map<std::string, genericAlgRes_t>);
 		}
 		shapeBackend::~shapeBackend() {}
-		hash::HASH_t shapeBackend::genHash() const {
+		hash::HASH_p shapeBackend::genHash() const {
 			const int sz = (int) data->size();
-			hash::HASH_t res = hash::HASH(
+			hash::HASH_p res = hash::HASH(
 				data->data(),
 				sz * sizeof(shapeStorage_t::Scalar));
 			return res;
 		}
 		void shapeBackend::invalidate() {
-			hash::HASH_t newHash = genHash();
-			if (curHash == newHash) return;
+			hash::HASH_p newHash = genHash();
+			if (*(curHash.get()) == *(newHash.get())) return;
 			curHash = newHash;
 			genStats();
-			ingest = ::Ryan_Scat::generateIngest();
+			//ingest = ::Ryan_Scat::generateIngest();
 			cache->clear();
 		}
 
@@ -77,8 +78,8 @@ namespace Ryan_Scat {
 		}
 		double shape::getPreferredDipoleSpacing() const { return p->dSpacing; }
 		void shape::setPreferredDipoleSpacing(double r) { p->dSpacing = r; }
-		ingest_ptr shape::getIngestInformation() const { return p->ingest; }
-		void shape::setIngestInformation(const ingest_ptr r) { p->ingest = r; }
+		//ingest_ptr shape::getIngestInformation() const { return p->ingest; }
+		//void shape::setIngestInformation(const ingest_ptr r) { p->ingest = r; }
 		void shape::getTags(tags_t& r) const { r = p->tags; }
 		void shape::setTags(const tags_t& r) { p->tags = r; }
 		shapeHeaderStorage_p shape::getHeader() const { return p->header; }
@@ -86,7 +87,7 @@ namespace Ryan_Scat {
 		shapePointStatsStorage_p shape::getStats() const { return p->stats; }
 		void shape::getStats(shapePointStatsStorage_p r) const { r = p->stats; }
 		void shape::getStats(shapePointStatsStorage_t& r) const { r = *(p->stats.get()); }
-		hash::HASH_t shape::hash() const { return p->curHash; }
+		hash::HASH_p shape::hash() const { return p->curHash; }
 		cache_t shape::cache() const { return p->cache; }
 
 		void shape::setPoints(const shapeStorage_p r) {

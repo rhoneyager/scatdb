@@ -1,6 +1,6 @@
 #pragma warning( disable : 4996 ) // -D_SCL_SECURE_NO_WARNINGS
 #pragma warning( disable : 4244 ) // 'argument': conversion from 'std::streamsize' to 'int', possible loss of data - boost::copy
-#include "../Ryan_Scat/defs.hpp"
+#include "../scatdb/defs.hpp"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -12,14 +12,12 @@
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/include/phoenix_stl.hpp>
-#include "../Ryan_Scat/macros.hpp"
-#include "../Ryan_Scat/shape.hpp"
-#include "../Ryan_Scat/shapeForwards.hpp"
-#include "../Ryan_Scat/shapeIO.hpp"
+#include "../scatdb/macros.hpp"
+#include "../scatdb/shape/shape.hpp"
+#include "../scatdb/shape/shapeForwards.hpp"
 #include "../private/shapeIOtext.hpp"
 #include "../private/shapeBackend.hpp"
-#include "../Ryan_Scat/ingest.hpp"
-#include "../Ryan_Scat/error.hpp"
+#include "../scatdb/error.hpp"
 #ifdef min
 #undef min
 #endif
@@ -87,29 +85,29 @@ namespace {
 	}
 }
 
-namespace Ryan_Scat
+namespace scatdb
 {
 	namespace plugins
 	{
 		namespace builtin
 		{
 			namespace shape {
-				void readDDSCAT(std::shared_ptr<::Ryan_Scat::shape::shape> s,
+				void readDDSCAT(std::shared_ptr<::scatdb::shape::shape> s,
 					std::istream &in, std::shared_ptr<registry::options> opts)
 				{
 					std::ostringstream so;
 					boost::iostreams::copy(in, so);
 					std::string str = so.str();
 					std::string desc;
-					std::shared_ptr<::Ryan_Scat::shape::shapeStorage_t> data(
-						new ::Ryan_Scat::shape::shapeStorage_t);
-					std::shared_ptr<::Ryan_Scat::shape::shapeHeaderStorage_t> hdr
-						(new ::Ryan_Scat::shape::shapeHeaderStorage_t);
+					std::shared_ptr<::scatdb::shape::shapeStorage_t> data(
+						new ::scatdb::shape::shapeStorage_t);
+					std::shared_ptr<::scatdb::shape::shapeHeaderStorage_t> hdr
+						(new ::scatdb::shape::shapeHeaderStorage_t);
 					size_t headerEnd = 0, numPoints = 0;
 					readHeader(str.c_str(), desc, numPoints, hdr, headerEnd);
-					data->resize((int)numPoints, ::Ryan_Scat::shape::backends::NUM_SHAPECOLS);
+					data->resize((int)numPoints, ::scatdb::shape::backends::NUM_SHAPECOLS);
 					readTextContents(str.c_str(), headerEnd, data);
-					auto ing = Ryan_Scat::generateIngest();
+					auto ing = scatdb::generateIngest();
 					/// \todo Change ingest to show absolute path
 					ing->sources.push_back(opts->getVal<std::string>("filename", "Unknown file"));
 					s->setIngestInformation(ing);
@@ -118,7 +116,7 @@ namespace Ryan_Scat
 					s->setPoints(data);
 				}
 				void readHeader(const char* in, std::string &desc, size_t &np,
-					std::shared_ptr<::Ryan_Scat::shape::shapeHeaderStorage_t> hdr,
+					std::shared_ptr<::scatdb::shape::shapeHeaderStorage_t> hdr,
 					size_t &headerEnd)
 				{
 					using namespace std;
@@ -186,7 +184,7 @@ namespace Ryan_Scat
 					headerEnd = (pend - in) / sizeof(char);
 				}
 				void readTextContents(const char *iin, size_t headerEnd,
-					std::shared_ptr<::Ryan_Scat::shape::shapeStorage_t> data)
+					std::shared_ptr<::scatdb::shape::shapeStorage_t> data)
 				{
 					using namespace std;
 					
@@ -213,7 +211,7 @@ namespace Ryan_Scat
 						// First field truly is a dummy variable. No correclation with point ordering at all.
 						//size_t pIndex = parser_vals[index].at(7 * i) - 1;
 						size_t pIndex = 7 * i;
-						auto crdsm = data->block<1, Ryan_Scat::shape::backends::NUM_SHAPECOLS>(i, 0);
+						auto crdsm = data->block<1, scatdb::shape::backends::NUM_SHAPECOLS>(i, 0);
 						for (size_t j = 0; j < 7; j++) // TODO: rewrite using eigen?
 						{
 							float val = (float)parser_vals.at(pIndex + j);

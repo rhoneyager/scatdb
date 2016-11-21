@@ -1,10 +1,10 @@
 #pragma once
-#include "defs.hpp"
+#include "../defs.hpp"
 #include <Eigen/Dense>
 #include <memory>
 #include <map>
 #include <string>
-namespace Ryan_Scat {
+namespace scatdb {
 	namespace shape {
 		class shape;
 		class shapeIO;

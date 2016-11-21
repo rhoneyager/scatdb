@@ -50,7 +50,7 @@ cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX={install path} {P
 ```
 make
 ```
-- If the build is successful, binaries and libraries should be in the ./Debug directory. These can all be copied
+- If the build is successful, binaries and libraries should be in the ./RelWithDebInfo directory. These can all be copied
 to the install directory using:
 ```
 sudo make install

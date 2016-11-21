@@ -1,6 +1,6 @@
 #include "../private/versioning.hpp"
 #include "../scatdb/error.hpp"
-#include "../private/hash.hpp"
+#include "../scatdb/hash.hpp"
 #include <cstring>
 namespace scatdb {
 	namespace versioning {
@@ -73,22 +73,24 @@ namespace scatdb {
 			return internal::ver_int;
 		}
 
-		void getHashOfVersionInfo(const versionInfo &in, hash::HASH_t &out) {
-			hash::HASH_t hBools = hash::HASH(in.vb, sizeof(in.vb));
-			hash::HASH_t hNums = hash::HASH(in.vn, sizeof(in.vn));
+		hash::HASH_p getHashOfVersionInfo(const versionInfo &in) {
+			std::shared_ptr< hash::HASH_t> res(new hash::HASH_t);
+			hash::HASH_p hBools = hash::HASH(in.vb, sizeof(in.vb));
+			hash::HASH_p hNums = hash::HASH(in.vn, sizeof(in.vn));
 
-			hash::HASH_t hvdate = hash::HASH(in.vdate, (int) sizeof(char) * (int)strnlen_s(in.vdate, versionInfo::charmax));
-			hash::HASH_t hvtime = hash::HASH(in.vtime, (int) sizeof(char) * (int)strnlen_s(in.vtime, versionInfo::charmax));
-			hash::HASH_t hvsdate = hash::HASH(in.vsdate, (int) sizeof(char) * (int)strnlen_s(in.vsdate, versionInfo::charmax));
-			hash::HASH_t hvssource = hash::HASH(in.vssource, (int) sizeof(char) * (int)strnlen_s(in.vssource, versionInfo::charmax));
-			hash::HASH_t hvsuuid = hash::HASH(in.vsuuid, (int) sizeof(char) * (int)strnlen_s(in.vsuuid, versionInfo::charmax));
-			hash::HASH_t hvboost = hash::HASH(in.vboost, (int) sizeof(char) * (int)strnlen_s(in.vboost, versionInfo::charmax));
-			hash::HASH_t hvassembly = hash::HASH(in.vassembly, (int) sizeof(char) * (int)strnlen_s(in.vassembly, versionInfo::charmax));
-			hash::HASH_t hvgithash = hash::HASH(in.vgithash, (int) sizeof(char) * (int)strnlen_s(in.vgithash, versionInfo::charmax));
-			hash::HASH_t hvgitbranch = hash::HASH(in.vgitbranch, (int) sizeof(char) * (int)strnlen_s(in.vgitbranch, versionInfo::charmax));
+			hash::HASH_p hvdate = hash::HASH(in.vdate, (int) sizeof(char) * (int)strnlen_s(in.vdate, versionInfo::charmax));
+			hash::HASH_p hvtime = hash::HASH(in.vtime, (int) sizeof(char) * (int)strnlen_s(in.vtime, versionInfo::charmax));
+			hash::HASH_p hvsdate = hash::HASH(in.vsdate, (int) sizeof(char) * (int)strnlen_s(in.vsdate, versionInfo::charmax));
+			hash::HASH_p hvssource = hash::HASH(in.vssource, (int) sizeof(char) * (int)strnlen_s(in.vssource, versionInfo::charmax));
+			hash::HASH_p hvsuuid = hash::HASH(in.vsuuid, (int) sizeof(char) * (int)strnlen_s(in.vsuuid, versionInfo::charmax));
+			hash::HASH_p hvboost = hash::HASH(in.vboost, (int) sizeof(char) * (int)strnlen_s(in.vboost, versionInfo::charmax));
+			hash::HASH_p hvassembly = hash::HASH(in.vassembly, (int) sizeof(char) * (int)strnlen_s(in.vassembly, versionInfo::charmax));
+			hash::HASH_p hvgithash = hash::HASH(in.vgithash, (int) sizeof(char) * (int)strnlen_s(in.vgithash, versionInfo::charmax));
+			hash::HASH_p hvgitbranch = hash::HASH(in.vgitbranch, (int) sizeof(char) * (int)strnlen_s(in.vgitbranch, versionInfo::charmax));
 
-			out = hBools ^ hNums ^ hvdate ^ hvtime ^ hvsdate ^ hvssource
-				^ hvsuuid ^ hvboost ^ hvassembly ^ hvgithash ^ hvgitbranch;
+			*res = *(hBools.get()) ^ *(hNums.get()) ^ *(hvdate.get()) ^ *(hvtime.get()) ^ *(hvsdate.get()) ^ *(hvssource.get())
+				^ *(hvsuuid.get()) ^ *(hvboost.get()) ^ *(hvassembly.get()) ^ *(hvgithash.get()) ^ *(hvgitbranch.get());
+			return res;
 		}
 
 		const std::string versionInfo::stringifyBool(int bools) {

@@ -1,24 +1,25 @@
 #pragma once
-#include "../Ryan_Scat/defs.hpp"
-#include "../Ryan_Scat/shape.hpp"
-namespace Ryan_Scat {
+#include "../scatdb/defs.hpp"
+#include "../scatdb/shape/shape.hpp"
+#include "../scatdb/hashForwards.hpp"
+namespace scatdb {
 	namespace shape {
-		class INTERNAL_TAG shapeBackend {
+		class HIDDEN_SDBR shapeBackend {
 		public:
 			shapeBackend();
 			~shapeBackend();
 			shapeStorage_p data;
 			shapePointsOnly_p ptsonly;
-			hash::HASH_t curHash;
+			hash::HASH_p curHash;
 			shapePointStatsStorage_p stats;
 			std::string desc;
-			ingest_ptr ingest;
+			//ingest_ptr ingest;
 			tags_t tags;
 			shapeHeaderStorage_p header;
 			cache_t cache;
 			double dSpacing;
 
-			hash::HASH_t genHash() const;
+			hash::HASH_p genHash() const;
 			void invalidate();
 			void genStats();
 			void genDataFromPtsOnly();

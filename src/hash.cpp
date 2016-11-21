@@ -1,5 +1,5 @@
 #include "../scatdb/defs.h"
-#include "../private/hash.hpp"
+#include "../scatdb/hash.hpp"
 #include "../private/MurmurHash3.h"
 #include <sstream>
 #include <string>
@@ -13,10 +13,10 @@ namespace scatdb {
 			std::string res = o.str();
 			return res;
 		}
-		HASH_t HASH(const void *key, int len)
+		HASH_p HASH(const void *key, int len)
 		{
-			HASH_t res;
-			MurmurHash3_x64_128(key, len, HASHSEED_SDBR, &res);
+			std::shared_ptr< HASH_t> res(new HASH_t);
+			MurmurHash3_x64_128(key, len, HASHSEED_SDBR, res.get());
 			return res;
 		}
 
