@@ -13,6 +13,18 @@ namespace scatdb {
 			std::shared_ptr<shape> res(new shape);
 			return res;
 		}
+		std::shared_ptr<shape> shape::clone() const {
+			std::shared_ptr<shape> res(new shape);
+			auto pts = this->getPoints();
+			res->setPoints(pts);
+			res->setDescription(getDescription());
+			res->setHeader(getHeader());
+			res->setPreferredDipoleSpacing(getPreferredDipoleSpacing());
+			tags_t tags;
+			getTags(tags);
+			res->setTags(tags);
+			return res;
+		}
 		shapeBackend::shapeBackend() : dSpacing(0) {
 			data = std::shared_ptr<shapeStorage_t>(new shapeStorage_t);
 			ptsonly = std::shared_ptr<shapePointsOnly_t>(new shapePointsOnly_t);

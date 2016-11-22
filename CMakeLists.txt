@@ -140,6 +140,7 @@ SET(scatdb_main
 	)
 set(scatdb_shape
 	src/shape.cpp
+	src/shapeAlgsProj.cpp
 	src/shapeIO.cpp
 	#src/shapeIOtext.cpp
 	src/shapeIOtextParsers.cpp

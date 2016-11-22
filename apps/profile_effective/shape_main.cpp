@@ -19,6 +19,7 @@
 #include "../../scatdb/hash.hpp"
 #include "../../scatdb/shape/shape.hpp"
 #include "../../scatdb/shape/shapeIO.hpp"
+#include "../../scatdb/shape/shapeAlgs.hpp"
 #include <hdf5.h>
 #include <H5Cpp.h>
 #include <H5ArrayType.h>
@@ -103,14 +104,22 @@ int main(int argc, char** argv) {
 			auto &bints = sints.block<1, NUM_COLS_INTS>(i, 0);
 			auto &bfloats = sfloats.block<1, NUM_COLS_FLOATS>(i, 0);
 			auto shp = sio.shapes[i];
-			double ds = shp->getPreferredDipoleSpacing();
-			if (!ds) ds = 40;
+			float ds = (float) shp->getPreferredDipoleSpacing();
+			if (!ds) ds = 40.f;
 			bints(COL_ID) = shp->hash()->lower;
 			bints(COL_NUM_LATTICE) = (uint64_t) shp->numPoints();
 			bfloats(COL_AEFF) = ds * std::pow(3.f*((float)shp->numPoints()) / (4.f*3.141592654f), 1.f / 3.f);
-			bfloats(COL_MD);
-			bfloats(COL_PROJAREA);
-			bfloats(COL_CIRCUMAREAFRAC);
+			
+			for (int axis = 0; axis < 3; ++axis) {
+				auto shpproj = shape::algorithms::projectShape(shp, axis);
+				float pmd = 0, parea = 0, pcaf = 0;
+				shape::algorithms::getProjectedStats(shpproj, pmd, parea, pcaf);
+
+				if ((ds * pmd) > bfloats(COL_MD)) bfloats(COL_MD) = ds * pmd;
+				bfloats(COL_PROJAREA) += ds * (1.f / 3.f) * parea;
+				bfloats(COL_CIRCUMAREAFRAC) += (1.f / 3.f) * pcaf;
+			}
+			// Fall velocity is calculated directly from the final projected area.
 			bfloats(COL_FALLVEL);
 			++i;
 		}

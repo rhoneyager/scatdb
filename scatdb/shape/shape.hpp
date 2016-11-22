@@ -15,6 +15,7 @@ namespace scatdb {
 			shapeBackend_ptr p;
 		public:
 			static std::shared_ptr<shape> generate();
+			std::shared_ptr<shape> clone() const;
 			~shape();
 			shapeStorage_p getPoints() const;
 			void getPoints(shapeStorage_p&) const;
