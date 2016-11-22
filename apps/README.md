@@ -31,9 +31,10 @@ effective reflectivity. It subsets the scattering database according to user-pro
 frequency and temperature ranges. If multiple frequency ranges are provided, it will
 also calculate the dual frequency ratios.
 
-- The [scatdb_profile_particle](./profile_effective/README.md) application calculates
+- The [scatdb_profile_shapes](./profile_effective/README.md) application calculates
 PSD-dependent bulk quantities that do not depend on frequency or temperature. These
 include expected fall velocities and ice water contents.
+
 
 
 Utility apps:

@@ -13,6 +13,7 @@ namespace scatdb {
 			virtual ~shapeIO();
 			static std::shared_ptr<shapeIO> generate();
 			std::vector<shape_ptr> shapes;
+			void readFile(const std::string &filename);
 		};
 	}
 }

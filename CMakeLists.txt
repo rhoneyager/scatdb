@@ -141,7 +141,7 @@ SET(scatdb_main
 set(scatdb_shape
 	src/shape.cpp
 	src/shapeIO.cpp
-	src/shapeIOtext.cpp
+	#src/shapeIOtext.cpp
 	src/shapeIOtextParsers.cpp
 	scatdb/shape/shape.hpp
 	scatdb/shape/shapeIO.hpp
@@ -167,6 +167,13 @@ SET(scatdb_units
 	scatdb/units/unitsPlugins.hpp
 	private/unitsBackend.hpp
 	)
+set(scatdb_docs
+	README.md
+	changelog.md
+	dbformat.md
+	INSTALL.md
+	)
+source_group("Docs" FILES ${scatdb_docs})
 SOURCE_GROUP("OS" FILES ${scatdb_os})
 SOURCE_GROUP("Debug" FILES ${scatdb_debug})
 source_group("Main" FILES ${scatdb_main})
@@ -180,10 +187,7 @@ set( scatdb_srcs
 	${scatdb_refract}
 	${scatdb_shape}
 	${scatdb_units}
-	README.md
-	changelog.md
-	dbformat.md
-	INSTALL.md
+	${scatdb_docs}
 	"${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake-settings.h"
    )

@@ -302,24 +302,6 @@ int main(int argc, char** argv) {
 			filters.push_back(std::move(filtered_info("Nowell_Rounded+5,6,7,8,20+262/264")));
 
 			filters.push_back(std::move(filtered_info("Nowell_AR06+5,6,7,8,21,22+262/264")));
-			filters.push_back(std::move(filtered_info("Ori_SAM+30+270/280")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_A_0.0+40+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_A_0.1+41+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_A_0.2+42+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_A_0.5+43+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_A_1.0+44+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_A_2.0+45+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_B_0.1+46+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_B_0.2+47+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_B_0.5+48+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_B_1.0+49+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_B_2.0+50+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Leinonen_and_Szyrmer_2015_C+51+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Tyynela_Chandrasekhar_2014_Fernlike_Dendrite+60+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Tyynela_Chandrasekhar_2014_Needle+61+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Tyynela_Chandrasekhar_2014_Rosette+62+-1000/1000")));
-			filters.push_back(std::move(filtered_info("Tyynela_Chandrasekhar_2014_Stellar_Dendrite+63+-1000/1000")));
-
 		}
 		else {
 			vector<string> sfilters = vm["filter"].as<vector<string> >();
