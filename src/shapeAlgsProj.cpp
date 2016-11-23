@@ -56,7 +56,7 @@ namespace scatdb {
 				}
 			}
 			area = (float) p->numPoints();
-			float circArea = 3.141592654f * maxDimension;
+			float circArea = 3.141592654f * maxDimension * maxDimension / 4.f;
 			circAreaFrac = area / circArea;
 		}
 
