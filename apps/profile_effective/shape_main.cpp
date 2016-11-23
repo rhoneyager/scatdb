@@ -122,7 +122,7 @@ int main(int argc, char** argv) {
 			// Fall velocity is calculated directly from the final projected area.
 			bfloats(COL_FALLVEL);
 			++i;
-		}
+		}                                       
 		// Write the raw tables
 		string sout;
 		if (vm.count("output")) sout = vm["output"].as<string>();
