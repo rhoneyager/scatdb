@@ -25,7 +25,7 @@ namespace scatdb {
 				bool good = true;
 				for (int j = 0; j < k; ++j) {
 					auto &cj = projptsB->block(j, 0, 1, NUM_SHAPECOLS);
-					if ((ci(X) == cj(X)) && (ci(Y) == cj(Y)) && (ci(Z) == cj(Z))) {
+					if ((ci(0,X) == cj(0,X)) && (ci(0,Y) == cj(0,Y)) && (ci(0,Z) == cj(0,Z))) {
 						good = false; break;
 					}
 				}
@@ -50,7 +50,7 @@ namespace scatdb {
 				const auto &ci = projptsA->block(i, 0, 1, NUM_SHAPECOLS);
 				for (int j = i+1; j < projptsA->rows(); ++j) {
 					const auto &cj = projptsA->block(j, 0, 1, NUM_SHAPECOLS);
-					float mdcsq = std::pow(ci(X) - cj(X), 2.f) + std::pow(ci(Y) - cj(Y), 2.f) + std::pow(ci(Z) - cj(Z), 2.f);
+					float mdcsq = std::pow(ci(0,X) - cj(0,X), 2.f) + std::pow(ci(0,Y) - cj(0,Y), 2.f) + std::pow(ci(0,Z) - cj(0,Z), 2.f);
 					float mdc = std::sqrt(mdcsq);
 					if (maxDimension < mdc) maxDimension = mdc;
 				}
