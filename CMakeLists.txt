@@ -142,6 +142,8 @@ set(scatdb_shape
 	src/shape.cpp
 	src/shapeAlgsProj.cpp
 	src/shapeIO.cpp
+	src/shapeIOhdfRead.cpp
+	src/shapeIOhdfWrite.cpp
 	#src/shapeIOtext.cpp
 	src/shapeIOtextParsers.cpp
 	scatdb/shape/shape.hpp

@@ -26,10 +26,8 @@ namespace scatdb {
 			modifiableOutput.push_back(shp);
 		}
 		void shapeIO::readFile(const std::string &filename) {
-			auto shp = ::scatdb::shape::shape::generate();
-			std::ifstream in(filename.c_str());
-			scatdb::plugins::builtin::shape::readDDSCAT(shp, in);
-			shapes.push_back(shp);
+			std::vector<std::shared_ptr<scatdb::shape::shape> > mo;
+			readFile(filename, mo);
 		}
 		void shapeIO::writeFile(const std::string &filename) const {
 			// TODO: look at extension!
