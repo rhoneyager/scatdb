@@ -15,5 +15,11 @@ namespace scatdb {
 					std::shared_ptr<::scatdb::shape::shapeStorage_t> data);
 			}
 		}
+		namespace hdf5 {
+			HIDDEN_SDBR void readShapesHDF5(const std::string &filename,
+				std::vector<std::shared_ptr<const ::scatdb::shape::shape> > &shps);
+			HIDDEN_SDBR void writeShapesHDF5(const std::string &filename,
+				const std::vector<std::shared_ptr<const ::scatdb::shape::shape> > &shps);
+		}
 	}
 }
