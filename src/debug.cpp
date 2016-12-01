@@ -16,7 +16,7 @@
 #include "../private/info.hpp"
 #include "../scatdb/logging.hpp"
 #include "../scatdb/splitSet.hpp"
-#include "../private/versioning.hpp"
+#include "../private/versioningGenerate.hpp"
 #include "../scatdb/scatdb.hpp"
 
 namespace {
@@ -175,7 +175,9 @@ namespace scatdb
 
 			std::ostringstream preambles;
 			preambles << "scatdb library information: \n";
-			scatdb::versioning::debug_preamble(preambles);
+			versioning::versionInfo v;
+			versioning::getLibVersionInfo(v);
+			versioning::debug_preamble(v, preambles);
 
 			std::string spreambles = preambles.str();
 

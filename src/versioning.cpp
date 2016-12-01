@@ -1,4 +1,4 @@
-#include "../private/versioning.hpp"
+#include "../private/versioningGenerate.hpp"
 #include "../scatdb/error.hpp"
 #include "../scatdb/hash.hpp"
 #include <cstring>
@@ -135,5 +135,57 @@ namespace scatdb {
 				.add<std::string>("Reason", "Input out of range.");
 			return std::string("");
 		}
+
+		void debug_preamble(const versionInfo &v, std::ostream &out)
+		{
+			out << "Compiled on " << v.vdate << " at " << v.vtime << std::endl;
+			out << "Version " << v.vn[versionInfo::V_MAJOR] << "." << v.vn[versionInfo::V_MINOR]
+				<< "." << v.vn[versionInfo::V_REVISION] << std::endl;
+			if (v.vgitbranch[0] != '\0') out << "GIT Branch " << v.vgitbranch << std::endl;
+			if (v.vgithash[0] != '\0') out << "GIT Hash " << v.vgithash << std::endl;
+			if (v.vn[versionInfo::V_SVNREVISION]) out << "SVN Revision " << v.vn[versionInfo::V_SVNREVISION] << std::endl;
+			if (v.vsdate[0] != '\0') out << "SVN Revision Date: " << v.vsdate << std::endl;
+			if (v.vssource[0] != '\0') out << "SVN Source: " << v.vssource << std::endl;
+			if (v.vsuuid[0] != '\0') out << "SVN UUID: " << v.vsuuid << std::endl;
+			if (v.vb[versionInfo::V_DEBUG]) out << "Debug Version" << std::endl;
+			else out << "Release Version" << std::endl;
+			if (v.vb[versionInfo::V_OPENMP]) out << "OpenMP enabled in Compiler" << std::endl;
+			else out << "OpenMP disabled in Compiler" << std::endl;
+			if (v.vb[versionInfo::V_AMD64] || v.vb[versionInfo::V_X64]) out << "64-bit build" << std::endl;
+			if (v.vb[versionInfo::V_UNIX]) out << "Unix / Linux Compile" << std::endl;
+			if (v.vb[versionInfo::V_APPLE]) out << "Mac Os X Compile" << std::endl;
+			if (v.vb[versionInfo::V_WIN32]) out << "Windows Compile" << std::endl;
+
+			if (v.vn[versionInfo::V_GNUC_MAJ])
+				out << "GNU Compiler Suite " << v.vn[versionInfo::V_GNUC_MAJ] << "."
+				<< v.vn[versionInfo::V_GNUC_MIN] << "." << v.vn[versionInfo::V_GNUC_PATCH] << std::endl;
+			if (v.vn[versionInfo::V_MINGW_MAJ])
+				out << "MinGW Compiler Suite " << v.vn[versionInfo::V_MINGW_MAJ] << "."
+				<< v.vn[versionInfo::V_MINGW_MIN] << std::endl;
+			if (v.vn[versionInfo::V_SUNPRO])
+				out << "Sun Studio Compiler Suite " << v.vn[versionInfo::V_SUNPRO] << std::endl;
+			if (v.vn[versionInfo::V_PATHCC_MAJ])
+				out << "EKOPath Compiler " << v.vn[versionInfo::V_PATHCC_MAJ] << "."
+				<< v.vn[versionInfo::V_PATHCC_MIN] << "." << v.vn[versionInfo::V_PATHCC_PATCH] << std::endl;
+			if (v.vb[versionInfo::V_LLVM]) out << "LLVM Compiler Suite" << std::endl;
+			if (v.vn[versionInfo::V_CLANG_MAJ])
+				out << "clang compiler " << v.vn[versionInfo::V_CLANG_MAJ] << "."
+				<< v.vn[versionInfo::V_CLANG_MIN] << "." << v.vn[versionInfo::V_CLANG_PATCH] << std::endl;
+			if (v.vn[versionInfo::V_INTEL])
+				out << "Intel Suite " << v.vn[versionInfo::V_INTEL]
+				<< " Date " << v.vn[versionInfo::V_INTEL_DATE] << std::endl;
+			if (v.vn[versionInfo::V_MSCVER])
+				out << "Microsoft Visual Studio Compiler Version " << v.vn[versionInfo::V_MSCVER] << std::endl;
+			out << "Boost version " << v.vboost << std::endl;
+
+			if (v.vb[versionInfo::V_HAS_BZIP2]) out << "Linked with bzip2." << std::endl;
+			if (v.vb[versionInfo::V_HAS_GZIP]) out << "Linked with gzip." << std::endl;
+			if (v.vb[versionInfo::V_HAS_ZLIB]) out << "Linked with zlib." << std::endl;
+			if (v.vb[versionInfo::V_HAS_SZIP]) out << "Linked with szip." << std::endl;
+
+			out << std::endl;
+			out << std::endl;
+		}
+
 	}
 }

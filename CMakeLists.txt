@@ -115,6 +115,7 @@ SET(scatdb_debug
 	src/versioning.cpp
 	private/versioning.hpp
 	private/versioningForwards.hpp
+	private/versioningGenerate.hpp
 	)
 SET(scatdb_main
 	src/export-hdf5.cpp

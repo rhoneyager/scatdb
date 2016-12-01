@@ -16,7 +16,7 @@
 #include "../scatdb/splitSet.hpp"
 #include "../private/info.hpp"
 #include "../private/os_functions_common.hpp"
-#include "../private/versioning.hpp"
+#include "../private/versioningGenerate.hpp"
 
 #ifdef _WIN32
 #include "../private/os_functions_win.hpp"
@@ -176,7 +176,9 @@ namespace scatdb {
 			using std::string;
 			using std::endl;
 			using boost::filesystem::path;
-			versioning::debug_preamble(out);
+			versioning::versionInfo v;
+			versioning::getLibVersionInfo(v);
+			versioning::debug_preamble(v, out);
 			getCurrentAppInfo();
 #ifdef _WIN32
 			string currentPath = win::GetModulePath();

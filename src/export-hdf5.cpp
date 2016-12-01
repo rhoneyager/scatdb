@@ -1,5 +1,5 @@
 #include "../scatdb/export-hdf5.hpp"
-
+#include "../private/versioning.hpp"
 //#include "cmake-settings.h"
 
 namespace {
@@ -15,7 +15,12 @@ namespace scatdb {
 			{
 				zlib = val;
 			}
-			bool useZLIB() { return zlib; }
+			bool useZLIB() { 
+				static bool inited = false;
+				if (inited) return zlib;
+				auto lvi = scatdb::versioning::getLibVersionInfo();
+				if (lvi->vb[versioning::versionInfo::V_HAS_GZIP]) zlib = true;
+				return zlib; }
 
 			template <class DataType>
 			MatchAttributeTypeType MatchAttributeType() { throw("Unsupported type during attribute conversion in rtmath::plugins::hdf5::MatchAttributeType."); }
