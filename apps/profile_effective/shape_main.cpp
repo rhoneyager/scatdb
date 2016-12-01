@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 			//	"Can be specified multiple times.")
 			("shapes,s", po::value<vector<string> >()->multitoken(), "Shape files")
 			//("dipole-spacings,d", po::value<double>()->default_value(40), "Shape dipole spacings (um)")
-			("output", po::value<string>(), "Output file path")
+			("output,o", po::value<string>(), "Output file path")
 			//("verbosity,v", po::value<int>()->default_value(1), "Change level of detail in "
 			//	"the output file. Higher number means more intermediate results will be writen.")
 			;
@@ -94,28 +94,57 @@ int main(int argc, char** argv) {
 			COL_FALLVEL,
 			NUM_COLS_FLOATS
 		};
+		Eigen::Array<uint64_t, Eigen::Dynamic, NUM_COLS_INTS> sints_raw;
+		Eigen::Array<float, Eigen::Dynamic, NUM_COLS_FLOATS> sfloats_raw;
+		sints_raw.resize((int)vsshapes.size(), NUM_COLS_INTS);
+		sfloats_raw.resize((int)vsshapes.size(), NUM_COLS_FLOATS);
+
 		Eigen::Array<uint64_t, Eigen::Dynamic, NUM_COLS_INTS> sints;
 		Eigen::Array<float, Eigen::Dynamic, NUM_COLS_FLOATS> sfloats;
 		sints.resize((int)vsshapes.size(), NUM_COLS_INTS);
 		sfloats.resize((int)vsshapes.size(), NUM_COLS_FLOATS);
 
 		// Read the shape files
+		map<uint64_t, shape::shape_ptr> loadedShapes;
 		shape::shapeIO sio;
-		sio.shapes.reserve(vsshapes.size());
+		//sio.shapes.reserve(vsshapes.size());
+		for (const auto &sf : vsshapes) {
+			sio.readFile(sf);
+			for (const auto &s : sio.shapes)
+				loadedShapes[s->hash()->lower] = s;
+			sio.shapes.clear();
+		}
+
+		// The float is the max dimension, and the size_t is the row number
+		const pair<float, size_t> proto(0, 0);
+		vector<pair<float, size_t> > id_sorter(loadedShapes.size(), proto);
+
 		size_t snum = 0;
-		for (const auto &s : vsshapes) {
-			sio.readFile(s);
-			auto bints = sints.block<1, NUM_COLS_INTS>(snum, 0);
-			auto bfloats = sfloats.block<1, NUM_COLS_FLOATS>(snum, 0);
-			auto shp = sio.shapes[snum];
-			float ds = (float) shp->getPreferredDipoleSpacing();
+		sints.resize((int) loadedShapes.size(), NUM_COLS_INTS);
+		sfloats.resize((int)loadedShapes.size(), NUM_COLS_FLOATS);
+		for (const auto &s : loadedShapes) {
+			auto bints = sints_raw.block<1, NUM_COLS_INTS>(snum, 0);
+			auto bfloats = sfloats_raw.block<1, NUM_COLS_FLOATS>(snum, 0);
+			auto shp = s.second;
+			float ds = (float)shp->getPreferredDipoleSpacing();
 			if (!ds) ds = 40.f;
 			bints(0, COL_ID) = shp->hash()->lower;
-			bints(0, COL_NUM_LATTICE) = (uint64_t) shp->numPoints();
-			shape::algorithms::getProjectedStats(shp, ds, "um", sfloats(0, COL_MD_M), sfloats(0, COL_PROJAREA),
-				sfloats(0, COL_CIRCUMAREAFRAC), sfloats(0, COL_MASS_KG), sfloats(0, COL_FALLVEL));
+			bints(0, COL_NUM_LATTICE) = (uint64_t)shp->numPoints();
+			shape::algorithms::getProjectedStats(shp, ds, "um", bfloats(0, COL_MD_M), bfloats(0, COL_PROJAREA),
+				bfloats(0, COL_CIRCUMAREAFRAC), bfloats(0, COL_MASS_KG), bfloats(0, COL_FALLVEL));
+			id_sorter[snum].first = bfloats(0, COL_MD_M);
+			id_sorter[snum].second = snum;
 			++snum;
-		}                                       
+		}
+		// Sort according to max dimension, which will make the binning process much faster.
+		std::sort(id_sorter.begin(), id_sorter.end(), [&](pair<float, size_t> i, pair<float, size_t> j)
+			{return i.first < j.first; });
+		for (int i = 0; i < sfloats.rows(); ++i) {
+			size_t raw_row = id_sorter[i].second;
+			sints.block<1, NUM_COLS_INTS>(i, 0) = sints_raw.block<1, NUM_COLS_INTS>((int)raw_row, 0);
+			sfloats.block<1, NUM_COLS_FLOATS>(i, 0) = sfloats_raw.block<1, NUM_COLS_FLOATS>((int)raw_row, 0);
+		}
+		
 		// Write the raw tables
 		string sout;
 		if (vm.count("output")) sout = vm["output"].as<string>();

@@ -103,6 +103,7 @@ namespace scatdb {
 					.add<string>("Filename", filename);
 
 				hsize_t sz = grpShapes->getNumObjs();
+				shps.reserve(shps.size() + (size_t)sz);
 				for (hsize_t i = 0; i < sz; ++i) {
 					string hname = grpShapes->getObjnameByIdx(i);
 					H5G_obj_t t = grpShapes->getObjTypeByIdx(i);
