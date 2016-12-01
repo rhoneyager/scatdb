@@ -17,17 +17,17 @@ macro(addBaseProject)
 
 # Compiler detection and rules
 if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
-	SET (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11")
-	set (CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c11")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
   # using Clang
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
   # using GCC
-	SET (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -fPIC")
-	set (CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c11")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
 	# using Intel C++
-	SET (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11")
-	set (CMAKE_C_FLAGS ${CMAKE_C_FLAGS} "-std=c11")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
 elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")
 	# using Visual Studio C++
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")

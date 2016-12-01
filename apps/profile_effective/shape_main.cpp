@@ -105,8 +105,8 @@ int main(int argc, char** argv) {
 		size_t snum = 0;
 		for (const auto &s : vsshapes) {
 			sio.readFile(s);
-			auto &bints = sints.block<1, NUM_COLS_INTS>(snum, 0);
-			auto &bfloats = sfloats.block<1, NUM_COLS_FLOATS>(snum, 0);
+			auto bints = sints.block<1, NUM_COLS_INTS>(snum, 0);
+			auto bfloats = sfloats.block<1, NUM_COLS_FLOATS>(snum, 0);
 			auto shp = sio.shapes[snum];
 			float ds = (float) shp->getPreferredDipoleSpacing();
 			if (!ds) ds = 40.f;
@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
 			binned_floats.resize(data->rows(), NUM_B_COLS_FLOATS);
 			
 			for (int row = 0; row < data->rows(); ++row) {
-				auto &brow = binned_floats.block<1, NUM_B_COLS_FLOATS>(row, 0);
+				auto brow = binned_floats.block<1, NUM_B_COLS_FLOATS>(row, 0);
 				brow(0, COL_B_BIN_LOW_MM) = (*data)(row, scatdb::profiles::defs::BIN_LOWER) / 1000.f; // mm
 				brow(0, COL_B_BIN_HIGH_MM) = (*data)(row, scatdb::profiles::defs::BIN_UPPER) / 1000.f; // mm
 				brow(0, COL_B_BIN_MID_MM) = (*data)(row, scatdb::profiles::defs::BIN_MID) / 1000.f; // mm
