@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
 		cmdline.add_options()
 			("help,h", "produce help message")
 			("input,i", po::value< vector<string> >()->multitoken(), "Input shapes")
-			("set-dipole-spacing,d", po::value<double>(), "Set dipole spacing (um)")
+			("set-dipole-spacing", po::value<double>(), "Set dipole spacing (um)")
 			("output,o", po::value< string >(), "Output file")
 			;
 

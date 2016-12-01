@@ -44,7 +44,9 @@ namespace scatdb {
 		}
 		void shapeBackend::invalidate() {
 			hash::HASH_p newHash = genHash();
-			if (*(curHash.get()) == *(newHash.get())) return;
+			if (curHash && newHash) {
+				if (*(curHash.get()) == *(newHash.get())) return;
+			}
 			curHash = newHash;
 			genStats();
 			//ingest = ::Ryan_Scat::generateIngest();
