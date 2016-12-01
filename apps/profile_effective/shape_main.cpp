@@ -208,6 +208,7 @@ int main(int argc, char** argv) {
 			auto data = prof->getData();
 			binned_floats.resize(data->rows(), NUM_B_COLS_FLOATS);
 			
+			int lastSortedShapeRow = 0;
 			for (int row = 0; row < data->rows(); ++row) {
 				auto brow = binned_floats.block<1, NUM_B_COLS_FLOATS>(row, 0);
 				brow(0, COL_B_BIN_LOW_MM) = (*data)(row, scatdb::profiles::defs::BIN_LOWER) / 1000.f; // mm
@@ -235,17 +236,18 @@ int main(int argc, char** argv) {
 				std::array<acc_type, 5> accs;
 				int count = 0;
 				// Push the data to the accumulator functions.
-				for (int i = 0; i<sfloats.rows(); ++i) {
+				for (int i = lastSortedShapeRow; i<sfloats.rows(); ++i) {
 					const auto &shpfloats = sfloats.block<1, NUM_COLS_FLOATS>(i, 0);
-					if ((shpfloats(COL_MD_M) * 1000. >= brow(0, COL_B_BIN_LOW_MM) )
-						&& (shpfloats(COL_MD_M) * 1000. < brow(0, COL_B_BIN_HIGH_MM))) {
-						accs[0]((double)shpfloats(COL_MASS_KG));
-						accs[1]((double)shpfloats(COL_MD_M));
-						accs[2]((double)shpfloats(COL_PROJAREA));
-						accs[3]((double)shpfloats(COL_CIRCUMAREAFRAC));
-						accs[4]((double)shpfloats(COL_FALLVEL));
-						++count;
-					}
+					if (shpfloats(COL_MD_M) * 1000.f < brow(0, COL_B_BIN_LOW_MM)) continue;
+					if (shpfloats(COL_MD_M) * 1000.f > brow(0, COL_B_BIN_HIGH_MM)) break;
+					lastSortedShapeRow = i;
+
+					accs[0]((double)shpfloats(COL_MASS_KG));
+					accs[1]((double)shpfloats(COL_MD_M));
+					accs[2]((double)shpfloats(COL_PROJAREA));
+					accs[3]((double)shpfloats(COL_CIRCUMAREAFRAC));
+					accs[4]((double)shpfloats(COL_FALLVEL));
+					++count;
 				}
 				brow(0, COL_B_NUM_IN_BIN) = (float)count;
 				brow(0, COL_B_MASS_KG) = (float)boost::accumulators::median(accs[0]);
