@@ -23,17 +23,16 @@ namespace scatdb {
 				int k = 0;
 				using namespace backends;
 				for (int i = 0; i < projptsA->rows(); ++i) {
-					auto &ci = projptsA->block(i, 0, 1, NUM_SHAPECOLS);
+					const auto &ci = projptsA->block(i, 0, 1, NUM_SHAPECOLS);
 					bool good = true;
 					for (int j = 0; j < k; ++j) {
-						auto &cj = projptsB->block(j, 0, 1, NUM_SHAPECOLS);
+						const auto &cj = projptsB->block(j, 0, 1, NUM_SHAPECOLS);
 						if ((ci(0, X) == cj(0, X)) && (ci(0, Y) == cj(0, Y)) && (ci(0, Z) == cj(0, Z))) {
 							good = false; break;
 						}
 					}
 					if (good) {
-						auto &ck = projptsB->block(k, 0, 1, NUM_SHAPECOLS);
-						ck = ci;
+						projptsB->block(k, 0, 1, NUM_SHAPECOLS) = ci;
 						++k;
 					}
 				}
