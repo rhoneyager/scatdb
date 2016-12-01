@@ -2,3 +2,4 @@ build
 .*.swp
 *~
 /CMakeRules/FindHDF5.cmake
+/setPaths.bat

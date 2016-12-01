@@ -124,7 +124,7 @@ public:
 				size_t colZemm = colZem + 1;
 				size_t coldbZe = colZem + 2;
 				data(i, colZemm) = 1.e18f * data(i, colZem);
-				data(i, coldbZe) = 10.f * std::log10f(data(i, colZemm));
+				data(i, coldbZe) = 10.f * log10f(data(i, colZemm));
 			}
 		}
 		/// Determine all dpr names and calculate all dprs.
