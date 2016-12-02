@@ -318,7 +318,7 @@ int main(int argc, char** argv) {
 			// Ice water content [g/m^3]
 			float v_mass_weighted_m_s = 0, v_num_weighted_m_s = 0, S_mm_h = 0, IWC_g_m3 = 0;
 			float Ndd_m_3 = 0, NddV_m_3_m_s = 0, NddM_m_3_kg = 0, NddMV_m_3_kg_m_s = 0;
-			float rho_g_m3 = (float) 9.16e5;
+			float rho_g_m3 = (float) 9.16e5; // 916 kg/m^3 = 9.16e5 g/m3
 			float rho_wat_g_m3 = (float) 1e6; // 1000 kg/m3 = 1e6 g/m3
 			for (int bin = 0; bin < binned_floats.rows(); ++bin) {
 				Ndd_m_3 += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f;
@@ -327,7 +327,8 @@ int main(int argc, char** argv) {
 				NddMV_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_MASS_KG);
 
 				/*
-				S_mm_h += 0.6f * pi * binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_CONC_M_4) // (m/s) * (m^-4)
+				S_mm_h += 0.6f * pi
+					* binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_CONC_M_4) // (m/s) * (m^-4)
 					* std::pow(binned_floats(bin, COL_B_BIN_MID_MM), 3.f) * binned_floats(bin, COL_B_BIN_WIDTH_MM) // mm^3 * mm
 					* (3600.f) // 3600 s in 1 h
 					* 1000.f // 1000 mm in 1 m
@@ -340,7 +341,7 @@ int main(int argc, char** argv) {
 					* binned_floats(bin, COL_B_VOL_M_3) // m^3
 					* binned_floats(bin, COL_B_FALLVEL) // m/s
 					* 1000.f // mm in 1 m
-					/ 3600.f // seconds in hour
+					* 3600.f // seconds in hour
 					;
 				/*
 				IWC_g_m3 += (pi / 6.f) * rho_kg_m3 // kg/m^3
