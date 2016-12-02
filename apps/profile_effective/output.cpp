@@ -121,11 +121,14 @@ namespace scatdb {
 				H5G_obj_t typ = grp->getObjTypeByIdx(i);
 				if (typ != H5G_DATASET) continue;
 
-				std::string scase = grp->getObjnameByIdx(i);
+				const int max_gname = 100;
+				char sccase[max_gname];
+				int glen = (int) grp->getObjnameByIdx(i, sccase, max_gname);
+				//std::string scase = grp->getObjnameByIdx(i);
 
 				std::shared_ptr<forward_conc_table> leg(new forward_conc_table);
 				std::shared_ptr<tbl_t> dnew(new tbl_t);
-				auto dset = scatdb::plugins::hdf5::readDatasetEigen< tbl_t, Group>(grp, scase.c_str(), *(dnew.get()));
+				auto dset = scatdb::plugins::hdf5::readDatasetEigen< tbl_t, Group>(grp, sccase, *(dnew.get()));
 
 				leg->data = dnew;
 				scatdb::plugins::hdf5::readAttr(dset, "TempC", leg->tempC);

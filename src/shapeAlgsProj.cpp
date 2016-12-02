@@ -111,7 +111,9 @@ namespace scatdb {
 				g = 9.794; // m/s^2
 			}
 			void getProjectedStats(shape_ptr p, double dSpacing, const std::string &dSpacingUnits,
-				float& mean_maxProjectedDimension_m, float& mean_projectedArea_m2, float& mean_circAreaFrac_dimensionless, float &mass_Kg, float &v_mps) {
+				float& mean_maxProjectedDimension_m, float& mean_projectedArea_m2,
+				float& mean_circAreaFrac_dimensionless, float &mass_Kg, float &v_mps,
+				float &volumeM, float &reffM) {
 				Eigen::Array3f mpd, mpa, caf;
 				// Convert volume into united quantity, and determine mass.
 				std::shared_ptr<scatdb::units::converter> cnv = std::shared_ptr<scatdb::units::converter>(new scatdb::units::converter(dSpacingUnits, "m"));
@@ -119,9 +121,10 @@ namespace scatdb {
 					.add<std::string>("Reason", "Dipole spacing units must be units of length. Either the units are wrong, or this conversion is unsupported.")
 					.add<std::string>("dSpacingUnits", dSpacingUnits);
 				double dSpacingM = cnv->convert(dSpacing);
-				double volumeM = std::pow(dSpacingM, 3.) * (double)p->numPoints();
-				double denKgM = 916; // density of ice in kg / m^3
-				double massKg = denKgM * volumeM;
+				volumeM = std::pow((float)dSpacingM, 3.f) * (float)p->numPoints();
+				reffM = std::pow(3.f*volumeM / (4.f*3.141592654f), 1.f / 3.f);
+				float denKgM = 916; // density of ice in kg / m^3
+				mass_Kg = denKgM * volumeM;
 
 				// Iterate over three projective axes
 				getProjectedStats(p, 1, dSpacingM, mpd(0), mpa(0), caf(0));

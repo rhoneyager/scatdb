@@ -97,17 +97,15 @@ int main(int argc, char** argv) {
 			COL_PROJAREA,
 			COL_CIRCUMAREAFRAC,
 			COL_FALLVEL,
+			COL_VOLM3,
+			COL_REFF_UM,
 			NUM_COLS_FLOATS
 		};
 		Eigen::Array<uint64_t, Eigen::Dynamic, NUM_COLS_INTS> sints_raw;
 		Eigen::Array<float, Eigen::Dynamic, NUM_COLS_FLOATS> sfloats_raw;
-		sints_raw.resize((int)vsshapes.size(), NUM_COLS_INTS);
-		sfloats_raw.resize((int)vsshapes.size(), NUM_COLS_FLOATS);
-
 		Eigen::Array<uint64_t, Eigen::Dynamic, NUM_COLS_INTS> sints;
 		Eigen::Array<float, Eigen::Dynamic, NUM_COLS_FLOATS> sfloats;
-		sints.resize((int)vsshapes.size(), NUM_COLS_INTS);
-		sfloats.resize((int)vsshapes.size(), NUM_COLS_FLOATS);
+		
 
 		// Read the shape files
 		cerr << "Reading " << vsshapes.size() << " files containing shapes." << endl;
@@ -138,9 +136,12 @@ int main(int argc, char** argv) {
 		id_sorter.resize(loadedShapes.size());
 
 		size_t snum = 0;
+		sints_raw.resize((int)loadedShapesV.size(), NUM_COLS_INTS);
+		sfloats_raw.resize((int)loadedShapesV.size(), NUM_COLS_FLOATS);
 		sints.resize((int)loadedShapesV.size(), NUM_COLS_INTS);
 		sfloats.resize((int)loadedShapesV.size(), NUM_COLS_FLOATS);
 		cerr << "Getting projected stats: ";
+		
 		for (const auto &shp : loadedShapesV) {
 			cerr << ".";
 			cerr.flush();
@@ -152,17 +153,20 @@ int main(int argc, char** argv) {
 			if (!ds) ds = 40.f;
 			bints(0, COL_ID) = shp->hash()->lower;
 			bints(0, COL_NUM_LATTICE) = (uint64_t)shp->numPoints();
-			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cfv = 0;
-			//shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cfv);
+			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cfv = 0, vm = 0, reffm = 0;
+			shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cfv, vm, reffm);
 			bfloats(0, COL_MD_M) = cmdm;
 			bfloats(0, COL_PROJAREA) = cpa;
 			bfloats(0, COL_CIRCUMAREAFRAC) = ccaf;
 			bfloats(0, COL_MASS_KG) = cm;
 			bfloats(0, COL_FALLVEL) = cfv;
+			bfloats(0, COL_VOLM3) = vm;
+			bfloats(0, COL_REFF_UM) = reffm * 1000000.f;
 			id_sorter[snum].first = bfloats(0, COL_MD_M);
 			id_sorter[snum].second = snum;
 			++snum;
 		}
+		
 		// Sort according to max dimension, which will make the binning process much faster.
 		cerr << "\nSorting all shapes according to maximum dimension." << endl;
 		std::sort(id_sorter.begin(), id_sorter.end(), [&](pair<float, size_t> i, pair<float, size_t> j)
@@ -180,21 +184,22 @@ int main(int argc, char** argv) {
 		std::shared_ptr<H5::H5File> file;
 		boost::filesystem::path p(sout);
 		file = std::shared_ptr<H5File>(new H5File(sout, H5F_ACC_TRUNC));
-		auto base = scatdb::plugins::hdf5::openOrCreateGroup(file, "output-shape-falls");
+		auto base = scatdb::plugins::hdf5::openOrCreateGroup(file, "shape-derived");
 		auto fsbase = scatdb::plugins::hdf5::openOrCreateGroup(base, "per-shape");
 		//cout << sints << endl;
 		auto rawi = plugins::hdf5::addDatasetEigen(fsbase, "ints", sints);
 		auto rawf = plugins::hdf5::addDatasetEigen(fsbase, "floats", sfloats);
-		exit(99);
 		// These, for some reason, cause a problem.
 		plugins::hdf5::addAttr<std::string>(rawi, "col_0", std::string("COL_ID"));
 		plugins::hdf5::addAttr<std::string>(rawi, "col_1", std::string("COL_NUM_LATTICE"));
 		plugins::hdf5::addAttr<std::string>(rawf, "col_0", std::string("COL_MASS_KG"));
 		plugins::hdf5::addAttr<std::string>(rawf, "col_1", std::string("COL_MD_M"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_2", std::string("COL_PROJAREA"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_2", std::string("COL_PROJAREA_M2"));
 		plugins::hdf5::addAttr<std::string>(rawf, "col_3", std::string("COL_CIRCUMAREAFRAC"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_4", std::string("COL_FALLVEL"));
-
+		plugins::hdf5::addAttr<std::string>(rawf, "col_4", std::string("COL_FALLVEL_M_S"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_5", std::string("COL_VOLUME_M3"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_6", std::string("COL_REFF_UM"));
+		//return 99;
 		auto fprof = scatdb::plugins::hdf5::openOrCreateGroup(file, "per-profile");
 
 		cerr << "Iterating over the profiles, and writing to the summary table." << endl;
@@ -316,13 +321,13 @@ int main(int argc, char** argv) {
 				NddM_m_3_kg += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_MASS_KG);
 				NddMV_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_MASS_KG);
 
-				S_mm_h = 0.6f * pi * binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_CONC_M_4) // (m/s) * (m^-4)
+				S_mm_h += 0.6f * pi * binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_CONC_M_4) // (m/s) * (m^-4)
 					* std::pow(binned_floats(bin, COL_B_BIN_MID_MM), 3.f) * binned_floats(bin, COL_B_BIN_WIDTH_MM) // mm^3 * mm
 					* (3600.f) // 3600 s in 1 h
 					* 1000.f // 1000 mm in 1 m
 					* (float) (1e-12) // (mm/m) ^ 4 conversion
 					;
-				IWC_g_m3 = (pi / 6.f) * rho_kg_m3 // kg/m^3
+				IWC_g_m3 += (pi / 6.f) * rho_kg_m3 // kg/m^3
 					* std::pow(binned_floats(bin, COL_B_BIN_MID_MM), 3.f) // mm^3
 					* binned_floats(bin, COL_B_CONC_M_4) // m^-4
 					* binned_floats(bin, COL_B_BIN_WIDTH_MM) // mm

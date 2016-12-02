@@ -10,7 +10,9 @@ namespace scatdb {
 				float& maxProjectedDimension_m, float& projectedArea_m2, float& circAreaFrac_dimensionless);
 			DLEXPORT_SDBR void getEnvironmentConds(double alt_m, double temp_k, double &eta, double &P_air, double &rho_air, double &g);
 			DLEXPORT_SDBR void getProjectedStats(shape_ptr p, double dSpacing, const std::string &dSpacingUnits,
-				float& mean_maxProjectedDimension_m, float& mean_projectedArea_m2, float& mean_circAreaFrac_dimensionless, float &mass_Kg, float &v_mps);
+				float& mean_maxProjectedDimension_m, float& mean_projectedArea_m2, 
+				float& mean_circAreaFrac_dimensionless, float &mass_Kg, float &v_mps,
+				float &vol_m, float &reff_m);
 		}
 	}
 }
