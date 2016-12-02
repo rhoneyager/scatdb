@@ -610,6 +610,9 @@ namespace scatdb {
 				if (h && h != INVALID_HANDLE_VALUE) CloseHandle(h);
 			}
 
+			void writeDebugStr(const std::string & instr) {
+				OutputDebugString(instr.c_str());
+			}
 		}
 
 	}

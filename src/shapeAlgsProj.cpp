@@ -2,42 +2,76 @@
 #include <iostream>
 #include <fstream>
 #include "../scatdb/error.hpp"
+#include "../scatdb/hash.hpp"
 #include "../scatdb/logging.hpp"
 #include "../scatdb/shape/shape.hpp"
 #include "../scatdb/shape/shapeAlgs.hpp"
 #include "../scatdb/units/units.hpp"
+#include "../private/chainHull.hpp"
 
 namespace scatdb {
 	namespace shape {
 		namespace algorithms {
+			namespace backend {
+				HIDDEN_SDBR void convertShapeTo2DpointArray(
+					shape_ptr p, int ignoredAxis, std::vector<contrib::chainHull::Point> &res)
+				{
+					res.clear();
+					res.reserve(p->numPoints());
+					shapePointsOnly_t pts;
+					p->getPoints(pts);
+					for (int i = 0; i < pts.rows(); ++i) {
+						float a, b;
+						if (ignoredAxis == 1) { a = pts(i, 1); b = pts(i, 2); }
+						else if (ignoredAxis == 2) { a = pts(i, 0); b = pts(i, 2); }
+						else if (ignoredAxis == 3) { a = pts(i, 0); b = pts(i, 1); }
+						else SDBR_throw(error::error_types::xBadInput)
+							.add<std::string>("Reason", "Bad input axis to be ignored. Must be 1, 2 or 3.")
+							.add<int>("ignoredAxis", ignoredAxis);
+						res.push_back(std::move(contrib::chainHull::Point(a, b)));
+					}
+					// Sort the resulting points
+					std::sort(res.begin(), res.end(),
+						[](const contrib::chainHull::Point& a, const contrib::chainHull::Point &b)
+					{ if (a.x != b.x) return a.x < b.x; return a.y < b.y; });
+				}
+
+				HIDDEN_SDBR void getHull(std::vector<contrib::chainHull::Point> &in, std::vector<contrib::chainHull::Point> &out) {
+					out.clear();
+					out.resize(in.size());
+					int n = contrib::chainHull::chainHull_2D(in.data(), (int)in.size(), out.data());
+					out.resize((size_t)n);
+				}
+			}
+
 			shape_ptr projectShape(shape_ptr p, int axis) {
 				auto res = p->clone();
-				shapeStorage_p inpts;
-				p->getPoints(inpts);
-				std::shared_ptr<shapeStorage_t> projptsA(new shapeStorage_t), projptsB(new shapeStorage_t);
-				*projptsA = *inpts;
-				projptsA->block(0, axis, projptsA->rows(), 1).setZero();
-				// Remove duplicate points
-				projptsB->resizeLike(*(projptsA.get()));
-				projptsB->setZero();
-				int k = 0;
-				using namespace backends;
-				for (int i = 0; i < projptsA->rows(); ++i) {
-					const auto &ci = projptsA->block(i, 0, 1, NUM_SHAPECOLS);
-					bool good = true;
-					for (int j = 0; j < k; ++j) {
-						const auto &cj = projptsB->block(j, 0, 1, NUM_SHAPECOLS);
-						if ((ci(0, X) == cj(0, X)) && (ci(0, Y) == cj(0, Y)) && (ci(0, Z) == cj(0, Z))) {
-							good = false; break;
-						}
+
+				std::vector<contrib::chainHull::Point> projPts;
+				backend::convertShapeTo2DpointArray(p, axis, projPts);
+				// ProjPts is already sorted, first by X, then by Y.
+				// I can easily drop points if already sorted!
+				shapePointsOnly_t finalPts;
+				finalPts.resize((int)(projPts.size()), 3);
+				finalPts.block(0, 2, finalPts.rows(), 1).setZero();
+				int numPts = 0;
+				contrib::chainHull::Point *lastPt = nullptr;
+				for (size_t i = 0; i < projPts.size(); ++i) {
+					if (lastPt) {
+						if ((lastPt->x = projPts[i].x) && (lastPt->y == projPts[i].y)) continue;
 					}
-					if (good) {
-						projptsB->block(k, 0, 1, NUM_SHAPECOLS) = ci;
-						++k;
-					}
+					finalPts(numPts, 0) = projPts[i].x;
+					finalPts(numPts, 1) = projPts[i].y;
+
+					numPts++;
+					lastPt = &(projPts[i]);
 				}
-				projptsB->resize(k, NUM_SHAPECOLS);
-				res->setPoints(projptsB);
+				finalPts.conservativeResize(numPts, 3);
+
+				res->setPoints(finalPts);
+
+				SDBR_log("shapeAlgorithms", logging::INFO, "Shape projection of " << p->hash()->lower
+					<< " projected " << p->numPoints() << " points to " << numPts << " in axis " << axis << ".");
 				return res;
 			}
 
@@ -45,19 +79,25 @@ namespace scatdb {
 				float& maxProjectedDimension_m, float& projectedArea_m2, float& circAreaFrac_dimensionless) {
 				auto sProj = projectShape(p, axis);
 
-				// Project the points in each axis, and calculate the projected stats for each case. Average them.
-				shapeStorage_p inpts;
-				sProj->getPoints(inpts);
-				using namespace backends;
-				for (int i = 0; i < inpts->rows(); ++i) {
-					const auto &ci = inpts->block(i, 0, 1, NUM_SHAPECOLS);
-					for (int j = i + 1; j < inpts->rows(); ++j) {
-						const auto &cj = inpts->block(j, 0, 1, NUM_SHAPECOLS);
-						float mdcsq = std::pow(ci(0, X) - cj(0, X), 2.f) + std::pow(ci(0, Y) - cj(0, Y), 2.f) + std::pow(ci(0, Z) - cj(0, Z), 2.f);
-						float mdc = (float) (std::sqrt(mdcsq) * dSpacingM);
+				std::vector<contrib::chainHull::Point> ptArrayIn, ptArrayCvx;
+				backend::convertShapeTo2DpointArray(sProj, axis, ptArrayIn);
+				backend::getHull(ptArrayIn, ptArrayCvx);
+				SDBR_log("shapeAlgorithms", logging::INFO,
+					"Shape projection of " << p->hash()->lower
+					<< " to axis " << axis << 
+					" had " << ptArrayIn.size() << " unique points, and the"
+					" 2D convex hull had " << ptArrayCvx.size() << " points."
+				);
+
+				for (size_t i = 0; i < ptArrayCvx.size(); ++i) {
+					for (size_t j = i + 1; j < ptArrayCvx.size(); ++j) {
+						float mdcsq = std::pow(ptArrayCvx[i].x - ptArrayCvx[j].x, 2.f)
+							+ std::pow(ptArrayCvx[i].y - ptArrayCvx[j].y, 2.f);
+						float mdc = (float)(std::sqrt(mdcsq) * dSpacingM);
 						if (maxProjectedDimension_m < mdc) maxProjectedDimension_m = mdc;
 					}
 				}
+
 				projectedArea_m2 = (float)sProj->numPoints() * (float) (dSpacingM * dSpacingM);
 				float circArea = 3.141592654f * maxProjectedDimension_m * maxProjectedDimension_m / 4.f;
 				circAreaFrac_dimensionless = projectedArea_m2 / circArea;

@@ -102,6 +102,7 @@ namespace scatdb
 			lps.debugChannel = false;
 			lps.logFile = lf;
 			lps.consoleLogThreshold = lt;
+			lps.debuggerLogThreshold = logging::INFO;
 			scatdb::logging::setupLogging(0,0,&lps);
 
 

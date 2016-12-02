@@ -19,5 +19,6 @@ namespace scatdb {
 			extern bool doWaitOnExit;
 			extern currentAppInfo_p _currentAppInfo;
 		}
+		HIDDEN_SDBR void writeDebugStr(const std::string & instr);
 	}
 }

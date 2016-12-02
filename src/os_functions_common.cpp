@@ -43,6 +43,11 @@ namespace scatdb {
 		}
 		using namespace ::scatdb::debug::vars;
 		
+		void writeDebugStr(const std::string & instr) {
+#ifdef _WIN32
+			return win::writeDebugStr(instr);
+#endif
+		}
 
 		/// Checks whether a process with the given pid exists.
 		bool pidExists(int pid) {

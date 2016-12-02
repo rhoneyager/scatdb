@@ -76,6 +76,11 @@ int main(int argc, char** argv) {
 		else doHelp("Must specify profile path");
 		auto allprofiles = profiles::forward_conc_table::readHDF5File(profname.c_str());
 
+		// Get the name of the output file.
+		string sout;
+		if (vm.count("output")) sout = vm["output"].as<string>();
+		else doHelp("Need to specify an output file");
+
 		// Read the shapes
 		if (!vm.count("shapes")) doHelp("Must specify shapes.");
 		vector<string> vsshapes = vm["shapes"].as<vector<string> >();
@@ -105,38 +110,61 @@ int main(int argc, char** argv) {
 		sfloats.resize((int)vsshapes.size(), NUM_COLS_FLOATS);
 
 		// Read the shape files
+		cerr << "Reading " << vsshapes.size() << " files containing shapes." << endl;
 		map<uint64_t, shape::shape_ptr> loadedShapes;
 		shape::shapeIO sio;
 		//sio.shapes.reserve(vsshapes.size());
 		for (const auto &sf : vsshapes) {
 			sio.readFile(sf);
-			for (const auto &s : sio.shapes)
-				loadedShapes[s->hash()->lower] = s;
+			for (const auto &s : sio.shapes) {
+				SDBR_log("profile_shape", logging::NOTIFICATION, "Loading " << s->hash()->lower);
+				if (!loadedShapes.count(s->hash()->lower))
+					loadedShapes[s->hash()->lower] = s;
+				else SDBR_log("profile_shape", logging::NOTIFICATION, "Loading " << s->hash()->lower << " was a duplicate.");
+			}
+			cerr << "\tFile " << sf << " had " << sio.shapes.size() << endl;
 			sio.shapes.clear();
 		}
+		cerr << "There are " << loadedShapes.size() << " total shapes." << endl;
+		// Vector copy just in case loadedShapes gets modified. Encountered while bug hunting for a 
+		// memory corruption error.
+		vector<shape::shape_ptr> loadedShapesV;
+		loadedShapesV.reserve(loadedShapes.size());
+		for (const auto &p : loadedShapes) loadedShapesV.push_back(p.second);
 
 		// The float is the max dimension, and the size_t is the row number
-		const pair<float, size_t> proto(0, 0);
-		vector<pair<float, size_t> > id_sorter(loadedShapes.size(), proto);
+		//const pair<float, size_t> proto(0, 0);
+		vector<pair<float, size_t> > id_sorter;
+		id_sorter.resize(loadedShapes.size());
 
 		size_t snum = 0;
-		sints.resize((int) loadedShapes.size(), NUM_COLS_INTS);
-		sfloats.resize((int)loadedShapes.size(), NUM_COLS_FLOATS);
-		for (const auto &s : loadedShapes) {
+		sints.resize((int)loadedShapesV.size(), NUM_COLS_INTS);
+		sfloats.resize((int)loadedShapesV.size(), NUM_COLS_FLOATS);
+		cerr << "Getting projected stats: ";
+		for (const auto &shp : loadedShapesV) {
+			cerr << ".";
+			cerr.flush();
+			SDBR_log("profile_shape", logging::NOTIFICATION, "Procesing number " << snum);
+			SDBR_log("profile_shape", logging::NOTIFICATION, "Procesing shape " << shp->hash()->lower);
 			auto bints = sints_raw.block<1, NUM_COLS_INTS>(snum, 0);
 			auto bfloats = sfloats_raw.block<1, NUM_COLS_FLOATS>(snum, 0);
-			auto shp = s.second;
 			float ds = (float)shp->getPreferredDipoleSpacing();
 			if (!ds) ds = 40.f;
 			bints(0, COL_ID) = shp->hash()->lower;
 			bints(0, COL_NUM_LATTICE) = (uint64_t)shp->numPoints();
-			shape::algorithms::getProjectedStats(shp, ds, "um", bfloats(0, COL_MD_M), bfloats(0, COL_PROJAREA),
-				bfloats(0, COL_CIRCUMAREAFRAC), bfloats(0, COL_MASS_KG), bfloats(0, COL_FALLVEL));
+			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cfv = 0;
+			//shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cfv);
+			bfloats(0, COL_MD_M) = cmdm;
+			bfloats(0, COL_PROJAREA) = cpa;
+			bfloats(0, COL_CIRCUMAREAFRAC) = ccaf;
+			bfloats(0, COL_MASS_KG) = cm;
+			bfloats(0, COL_FALLVEL) = cfv;
 			id_sorter[snum].first = bfloats(0, COL_MD_M);
 			id_sorter[snum].second = snum;
 			++snum;
 		}
 		// Sort according to max dimension, which will make the binning process much faster.
+		cerr << "\nSorting all shapes according to maximum dimension." << endl;
 		std::sort(id_sorter.begin(), id_sorter.end(), [&](pair<float, size_t> i, pair<float, size_t> j)
 			{return i.first < j.first; });
 		for (int i = 0; i < sfloats.rows(); ++i) {
@@ -146,9 +174,7 @@ int main(int argc, char** argv) {
 		}
 		
 		// Write the raw tables
-		string sout;
-		if (vm.count("output")) sout = vm["output"].as<string>();
-		else doHelp("Need to specify an output file");
+		cerr << "Writing the raw sorted shape tables for debugging purposes." << endl;
 		using namespace H5;
 		//Exception::dontPrint();
 		std::shared_ptr<H5::H5File> file;
@@ -156,19 +182,22 @@ int main(int argc, char** argv) {
 		file = std::shared_ptr<H5File>(new H5File(sout, H5F_ACC_TRUNC));
 		auto base = scatdb::plugins::hdf5::openOrCreateGroup(file, "output-shape-falls");
 		auto fsbase = scatdb::plugins::hdf5::openOrCreateGroup(base, "per-shape");
+		//cout << sints << endl;
 		auto rawi = plugins::hdf5::addDatasetEigen(fsbase, "ints", sints);
 		auto rawf = plugins::hdf5::addDatasetEigen(fsbase, "floats", sfloats);
-		plugins::hdf5::addAttr<std::string>(rawi, "col_0", "COL_ID");
-		plugins::hdf5::addAttr<std::string>(rawi, "col_1", "COL_NUM_LATTICE");
-		plugins::hdf5::addAttr<std::string>(rawf, "col_0", "COL_MASS_KG");
-		plugins::hdf5::addAttr<std::string>(rawf, "col_1", "COL_MD_M");
-		plugins::hdf5::addAttr<std::string>(rawf, "col_2", "COL_PROJAREA");
-		plugins::hdf5::addAttr<std::string>(rawf, "col_3", "COL_CIRCUMAREAFRAC");
-		plugins::hdf5::addAttr<std::string>(rawf, "col_4", "COL_FALLVEL");
+		exit(99);
+		// These, for some reason, cause a problem.
+		plugins::hdf5::addAttr<std::string>(rawi, "col_0", std::string("COL_ID"));
+		plugins::hdf5::addAttr<std::string>(rawi, "col_1", std::string("COL_NUM_LATTICE"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_0", std::string("COL_MASS_KG"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_1", std::string("COL_MD_M"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_2", std::string("COL_PROJAREA"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_3", std::string("COL_CIRCUMAREAFRAC"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_4", std::string("COL_FALLVEL"));
 
 		auto fprof = scatdb::plugins::hdf5::openOrCreateGroup(file, "per-profile");
 
-
+		cerr << "Iterating over the profiles, and writing to the summary table." << endl;
 		// Profile summary table
 		Eigen::Array<float, Eigen::Dynamic, 4> profloats;
 		profloats.resize((int)allprofiles->size(), 4);
@@ -180,6 +209,7 @@ int main(int argc, char** argv) {
 			++pnum;
 			string profid("profile_");
 			profid.append(boost::lexical_cast<string>(pnum));
+			cerr << "\tProfile " << profid << endl << "\t\tWriting..." << endl;
 			auto fpro = scatdb::plugins::hdf5::openOrCreateGroup(fprof, profid.c_str());
 			auto fraw = scatdb::plugins::hdf5::openOrCreateGroup(fpro, "Raw");
 			prof->writeHDF5File(fraw, profid.c_str());
@@ -207,9 +237,10 @@ int main(int argc, char** argv) {
 			Eigen::Array<float, Eigen::Dynamic, NUM_B_COLS_FLOATS> binned_floats;
 			auto data = prof->getData();
 			binned_floats.resize(data->rows(), NUM_B_COLS_FLOATS);
-			
+			cerr << "\t\tBinning: ";
 			int lastSortedShapeRow = 0;
 			for (int row = 0; row < data->rows(); ++row) {
+				cerr << "."; cerr.flush();
 				auto brow = binned_floats.block<1, NUM_B_COLS_FLOATS>(row, 0);
 				brow(0, COL_B_BIN_LOW_MM) = (*data)(row, scatdb::profiles::defs::BIN_LOWER) / 1000.f; // mm
 				brow(0, COL_B_BIN_HIGH_MM) = (*data)(row, scatdb::profiles::defs::BIN_UPPER) / 1000.f; // mm
@@ -256,19 +287,19 @@ int main(int argc, char** argv) {
 				brow(0, COL_B_CIRCUMAREAFRAC) = (float)boost::accumulators::median(accs[3]);
 				brow(0, COL_B_FALLVEL) = (float)boost::accumulators::median(accs[4]);
 			}
-
+			cerr << endl << "\t\tCalculating average quantities." << endl;
 			auto dbf = plugins::hdf5::addDatasetEigen(fpro, "binned_floats", binned_floats);
-			plugins::hdf5::addAttr<std::string>(dbf, "col_0", "COL_B_BIN_LOW_MM");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_1", "COL_B_BIN_MID_MM");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_2", "COL_B_BIN_WIDTH_MM");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_3", "COL_B_BIN_HIGH_MM");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_4", "COL_B_CONC_M_4");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_5", "COL_B_NUM_IN_BIN");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_6", "COL_B_MASS_KG");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_7", "COL_B_MD_M");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_8", "COL_B_PROJAREA");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_9", "COL_B_CIRCUMAREAFRAC");
-			plugins::hdf5::addAttr<std::string>(dbf, "col_10", "COL_B_FALLVEL");
+			plugins::hdf5::addAttr<std::string>(dbf, "col_0", std::string("COL_B_BIN_LOW_MM"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_1", std::string("COL_B_BIN_MID_MM"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_2", std::string("COL_B_BIN_WIDTH_MM"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_3", std::string("COL_B_BIN_HIGH_MM"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_4", std::string("COL_B_CONC_M_4"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_5", std::string("COL_B_NUM_IN_BIN"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_6", std::string("COL_B_MASS_KG"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_7", std::string("COL_B_MD_M"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_8", std::string("COL_B_PROJAREA"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_9", std::string("COL_B_CIRCUMAREAFRAC"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_10", std::string("COL_B_FALLVEL"));
 
 
 			// Calculate the bulk and mass-weighted quantities. Write these also.
@@ -301,6 +332,12 @@ int main(int argc, char** argv) {
 			}
 			v_num_weighted_m_s = NddV_m_3_m_s / Ndd_m_3;
 			v_mass_weighted_m_s = NddMV_m_3_kg_m_s / NddM_m_3_kg;
+			// nan checks for hdf5 write. NaNs may occur when debugging, when certain code branches are disabled.
+			if (v_mass_weighted_m_s != v_mass_weighted_m_s) v_mass_weighted_m_s = -1;
+			if (v_num_weighted_m_s != v_num_weighted_m_s) v_num_weighted_m_s = -1;
+			if (S_mm_h != S_mm_h) S_mm_h = -1;
+			if (IWC_g_m3 != IWC_g_m3) IWC_g_m3 = -1;
+
 
 			plugins::hdf5::addAttr<float>(fpro, "v_mass_weighted_m_s", v_mass_weighted_m_s);
 			plugins::hdf5::addAttr<float>(fpro, "v_num_weighted_m_s", v_num_weighted_m_s);
@@ -312,11 +349,12 @@ int main(int argc, char** argv) {
 			profloats(pnum - 1, 2) = v_mass_weighted_m_s;
 			profloats(pnum - 1, 3) = v_num_weighted_m_s;
 		}
+		cerr << "All profiles done. Writing summary table and exiting." << endl;
 		auto dbps = plugins::hdf5::addDatasetEigen(file, "profile_summary", profloats);
-		plugins::hdf5::addAttr<std::string>(dbps, "col_0", "S_mm_h");
-		plugins::hdf5::addAttr<std::string>(dbps, "col_1", "IWC_g_m3");
-		plugins::hdf5::addAttr<std::string>(dbps, "col_2", "v_mass_weighted_m_s");
-		plugins::hdf5::addAttr<std::string>(dbps, "col_3", "v_num_weighted_m_s");
+		plugins::hdf5::addAttr<std::string>(dbps, "col_0", std::string("S_mm_h"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_1", std::string("IWC_g_m3"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_2", std::string("v_mass_weighted_m_s"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_3", std::string("v_num_weighted_m_s"));
 
 	}
 	/// \todo Think of a method to rethrow an error without splicing.

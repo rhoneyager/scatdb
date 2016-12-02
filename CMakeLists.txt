@@ -140,6 +140,8 @@ SET(scatdb_main
 	src/zeros.cpp
 	)
 set(scatdb_shape
+	src/chainHull.cpp
+	private/chainHull.hpp
 	src/shape.cpp
 	src/shapeAlgsProj.cpp
 	src/shapeIO.cpp
@@ -172,6 +174,7 @@ SET(scatdb_units
 	private/unitsBackend.hpp
 	)
 set(scatdb_docs
+	LICENSE
 	README.md
 	changelog.md
 	dbformat.md
