@@ -237,6 +237,7 @@ int main(int argc, char** argv) {
 				COL_B_PROJAREA,
 				COL_B_CIRCUMAREAFRAC,
 				COL_B_FALLVEL,
+				COL_B_VOL_M_3,
 				NUM_B_COLS_FLOATS
 			};
 			Eigen::Array<float, Eigen::Dynamic, NUM_B_COLS_FLOATS> binned_floats;
@@ -269,7 +270,7 @@ int main(int argc, char** argv) {
 				typedef accumulator_set<double, boost::accumulators::stats <
 					tag::median
 				> > acc_type;
-				std::array<acc_type, 5> accs;
+				std::array<acc_type, 6> accs;
 				int count = 0;
 				// Push the data to the accumulator functions.
 				for (int i = lastSortedShapeRow; i<sfloats.rows(); ++i) {
@@ -283,6 +284,7 @@ int main(int argc, char** argv) {
 					accs[2]((double)shpfloats(COL_PROJAREA));
 					accs[3]((double)shpfloats(COL_CIRCUMAREAFRAC));
 					accs[4]((double)shpfloats(COL_FALLVEL));
+					accs[5]((double)shpfloats(COL_VOLM3));
 					++count;
 				}
 				brow(0, COL_B_NUM_IN_BIN) = (float)count;
@@ -291,6 +293,7 @@ int main(int argc, char** argv) {
 				brow(0, COL_B_PROJAREA) = (float)boost::accumulators::median(accs[2]);
 				brow(0, COL_B_CIRCUMAREAFRAC) = (float)boost::accumulators::median(accs[3]);
 				brow(0, COL_B_FALLVEL) = (float)boost::accumulators::median(accs[4]);
+				brow(0, COL_B_VOL_M_3) = (float)boost::accumulators::median(accs[5]);
 			}
 			cerr << endl << "\t\tCalculating average quantities." << endl;
 			auto dbf = plugins::hdf5::addDatasetEigen(fpro, "binned_floats", binned_floats);
@@ -305,6 +308,7 @@ int main(int argc, char** argv) {
 			plugins::hdf5::addAttr<std::string>(dbf, "col_8", std::string("COL_B_PROJAREA"));
 			plugins::hdf5::addAttr<std::string>(dbf, "col_9", std::string("COL_B_CIRCUMAREAFRAC"));
 			plugins::hdf5::addAttr<std::string>(dbf, "col_10", std::string("COL_B_FALLVEL"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_11", std::string("COL_B_VOL_M_3"));
 
 
 			// Calculate the bulk and mass-weighted quantities. Write these also.
@@ -314,7 +318,7 @@ int main(int argc, char** argv) {
 			// Ice water content [g/m^3]
 			float v_mass_weighted_m_s = 0, v_num_weighted_m_s = 0, S_mm_h = 0, IWC_g_m3 = 0;
 			float Ndd_m_3 = 0, NddV_m_3_m_s = 0, NddM_m_3_kg = 0, NddMV_m_3_kg_m_s = 0;
-			float rho_kg_m3 = 916;
+			float rho_g_m3 = (float) 9.16e5;
 			for (int bin = 0; bin < binned_floats.rows(); ++bin) {
 				Ndd_m_3 += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f;
 				NddV_m_3_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_FALLVEL);
@@ -327,12 +331,23 @@ int main(int argc, char** argv) {
 					* 1000.f // 1000 mm in 1 m
 					* (float) (1e-12) // (mm/m) ^ 4 conversion
 					;
+				/*
 				IWC_g_m3 += (pi / 6.f) * rho_kg_m3 // kg/m^3
+					//* binned_floats(bin, COL_B_VOL_M_3) // m^3
 					* std::pow(binned_floats(bin, COL_B_BIN_MID_MM), 3.f) // mm^3
 					* binned_floats(bin, COL_B_CONC_M_4) // m^-4
 					* binned_floats(bin, COL_B_BIN_WIDTH_MM) // mm
 					* (float) (1e-12) // m^-4 -> mm^-4
 					* 1000.f // kg->g
+					;
+				*/
+				IWC_g_m3 += rho_g_m3 // kg/m^3
+					* binned_floats(bin, COL_B_CONC_M_4) // m^-4
+					* binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f // m
+					* binned_floats(bin, COL_B_VOL_M_3) // m^3
+					//* std::pow(binned_floats(bin, COL_B_BIN_MID_MM), 3.f) // mm^3
+					//* (float)(1e-12) // m^-4 -> mm^-4
+					//* 1000.f // kg->g
 					;
 			}
 			v_num_weighted_m_s = NddV_m_3_m_s / Ndd_m_3;
