@@ -4,7 +4,7 @@
 namespace scatdb {
 	namespace contrib {
 		namespace chainHull {
-			HIDDEN_SDBR class Point { public: 
+			class HIDDEN_SDBR Point { public:
 				float x, y; 
 				Point(float a, float b) : x(a), y(b) {}
 				Point() : x(0), y(0) {} 
