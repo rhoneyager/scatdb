@@ -79,15 +79,13 @@ namespace scatdb {
 				float& maxProjectedDimension_m, float& projectedArea_m2, float& circAreaFrac_dimensionless) {
 				auto sProj = projectShape(p, axis);
 
+				maxProjectedDimension_m = -1;
+				projectedArea_m2 = -1;
+				circAreaFrac_dimensionless = -1;
+
 				std::vector<contrib::chainHull::Point> ptArrayIn, ptArrayCvx;
 				backend::convertShapeTo2DpointArray(sProj, axis, ptArrayIn);
 				backend::getHull(ptArrayIn, ptArrayCvx);
-				SDBR_log("shapeAlgorithms", logging::INFO,
-					"Shape projection of " << p->hash()->lower
-					<< " to axis " << axis << 
-					" had " << ptArrayIn.size() << " unique points, and the"
-					" 2D convex hull had " << ptArrayCvx.size() << " points."
-				);
 
 				for (size_t i = 0; i < ptArrayCvx.size(); ++i) {
 					for (size_t j = i + 1; j < ptArrayCvx.size(); ++j) {
@@ -101,6 +99,17 @@ namespace scatdb {
 				projectedArea_m2 = (float)sProj->numPoints() * (float) (dSpacingM * dSpacingM);
 				float circArea = 3.141592654f * maxProjectedDimension_m * maxProjectedDimension_m / 4.f;
 				circAreaFrac_dimensionless = projectedArea_m2 / circArea;
+				SDBR_log("shapeAlgorithms", logging::INFO,
+					"Shape projection of " << p->hash()->lower
+					<< " to axis " << axis << 
+					" had " << ptArrayIn.size() << " unique points, and the"
+					" 2D convex hull had " << ptArrayCvx.size() << " points. "
+					<< "maxProjDim_m = " << maxProjectedDimension_m
+					<< ", projectedArea_m2 = " << projectedArea_m2
+					<< ", circArea = " << circArea
+					<< ", circAreaFrac_dimensionless = " << circAreaFrac_dimensionless
+				);
+
 			}
 			void getEnvironmentConds(double alt_m, double temp_k, double &eta, double &P_air, double &rho_air, double &g) {
 				SDBR_log("shapeAlgs", logging::NOTIFICATION, "TODO: Finish implementation of getEnvironmentConds. Currently, "
@@ -115,6 +124,9 @@ namespace scatdb {
 				float& mean_circAreaFrac_dimensionless, float &mass_Kg, float &v_mps,
 				float &volumeM, float &reffM) {
 				Eigen::Array3f mpd, mpa, caf;
+				mpd.setZero();
+				mpa.setZero();
+				caf.setZero();
 				// Convert volume into united quantity, and determine mass.
 				std::shared_ptr<scatdb::units::converter> cnv = std::shared_ptr<scatdb::units::converter>(new scatdb::units::converter(dSpacingUnits, "m"));
 				if (!cnv->isValid()) SDBR_throw(error::error_types::xBadInput)
