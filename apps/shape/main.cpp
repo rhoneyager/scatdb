@@ -31,8 +31,8 @@ int main(int argc, char** argv) {
 			("input,i", po::value< vector<string> >()->multitoken(), "Input shapes")
 			("set-dipole-spacing", po::value<double>(), "Set dipole spacing (um)")
 			("output,o", po::value< string >(), "Output file")
+			("output-type", po::value<string>()->default_value(""), "Output file type (ddscat, raw, hdf5)")
 			;
-
 
 		desc.add(cmdline).add(config);
 		oall.add(cmdline).add(config).add(hidden);
@@ -62,9 +62,10 @@ int main(int argc, char** argv) {
 
 		string soutput;
 		if (vm.count("output")) soutput = vm["output"].as<string>();
+		string stype = vm["output-type"].as<string>();
 		if (soutput.size()) {
 			cerr << "Writing output file: " << soutput << endl;
-			sio->writeFile(soutput);
+			sio->writeFile(soutput,stype);
 		}
 	}
 	catch (std::exception &e) {

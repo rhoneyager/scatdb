@@ -3,6 +3,7 @@
 #include <fstream>
 #include <boost/filesystem.hpp>
 #include "../scatdb/error.hpp"
+#include "../scatdb/hash.hpp"
 #include "../scatdb/logging.hpp"
 #include "../scatdb/shape/shape.hpp"
 #include "../scatdb/shape/shapeIO.hpp"
@@ -30,9 +31,7 @@ namespace scatdb {
 				scatdb::plugins::hdf5::readShapesHDF5(filename, shapes);
 			} else {
 				// Assume a text file
-				std::ifstream in(filename.c_str());
-				auto shp = ::scatdb::shape::shape::generate();
-				scatdb::plugins::builtin::shape::readDDSCAT(shp, in);
+				auto shp = ::scatdb::plugins::builtin::shape::readTextFile(filename);
 				shapes.push_back(shp);
 				modifiableOutput.push_back(shp);
 			}
@@ -41,18 +40,30 @@ namespace scatdb {
 			std::vector<std::shared_ptr<scatdb::shape::shape> > mo;
 			readFile(filename, mo);
 		}
-		void shapeIO::writeFile(const std::string &filename) const {
+		void shapeIO::writeFile(const std::string &filename, const std::string &outType) const {
 			using namespace boost::filesystem;
 			path p(filename);
 			path pext = p.extension();
 
-			if (pext.string() == ".hdf5") {
+			if (pext.string() == ".hdf5" || outType == "hdf5") {
 				// hdf5 files may contain many shapes
 				plugins::hdf5::writeShapesHDF5(filename, this->shapes);
-			}
-			else {
-				SDBR_throw(error::error_types::xUnimplementedFunction);
+			} else {
+				auto writeShp = [&outType](const std::string &filename, shape_ptr s) {
+					if (outType == "ddscat" || outType == "") plugins::builtin::shape::writeDDSCAT(filename, s);
+					else if (outType == "raw") plugins::builtin::shape::writeTextRaw(filename, s);
+					else SDBR_throw(error::error_types::xUnimplementedFunction);
+				};
+				if (shapes.size() > 1) {
+					boost::filesystem::create_directory(p);
+					for (const auto &s : shapes) {
+						writeShp(s->hash()->string(), s);
+					}
+				}
+				else if (shapes.size() == 1) writeShp(filename, shapes[0]);
+				
 			}
 		}
+
 	}
 }

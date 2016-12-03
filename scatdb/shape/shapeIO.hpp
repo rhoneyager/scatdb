@@ -15,7 +15,7 @@ namespace scatdb {
 			std::vector<shape_ptr> shapes;
 			void readFile(const std::string &filename);
 			void readFile(const std::string &filename, std::vector<std::shared_ptr<scatdb::shape::shape> > &modifiableOutput);
-			void writeFile(const std::string &filename) const;
+			void writeFile(const std::string &filename, const std::string &outFile = "") const;
 		};
 	}
 }

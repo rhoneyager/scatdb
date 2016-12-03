@@ -12,6 +12,7 @@
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 #include <boost/spirit/include/phoenix_stl.hpp>
+#include <fstream>
 //#include "../scatdb/macros.hpp"
 #include "../scatdb/shape/shape.hpp"
 #include "../scatdb/shape/shapeForwards.hpp"
@@ -83,6 +84,27 @@ namespace {
 		);
 		return r;
 	}
+
+	template <typename OutputIterator, typename Container>
+	bool print_shapefile_pts(OutputIterator& sink, Container const& v)
+	{
+		using boost::spirit::karma::long_;
+		using boost::spirit::karma::repeat;
+		using boost::spirit::karma::generate;
+		//using boost::spirit::karma::generate_delimited;
+		using boost::spirit::ascii::space;
+
+		bool r = generate(
+			sink,                           // destination: output iterator
+			*(
+				//repeat(7)()
+				long_ << '\t' << long_ << '\t' << long_ << '\n'
+				),
+			//space,                          // the delimiter-generator
+			v                               // the data to output 
+		);
+		return r;
+	}
 }
 
 namespace scatdb
@@ -92,12 +114,10 @@ namespace scatdb
 		namespace builtin
 		{
 			namespace shape {
-				void readDDSCAT(std::shared_ptr<::scatdb::shape::shape> s,
-					std::istream &in)
+				std::shared_ptr<::scatdb::shape::shape> readDDSCAT(const char* in)
 				{
-					std::ostringstream so;
-					boost::iostreams::copy(in, so);
-					std::string str = so.str();
+					std::shared_ptr<::scatdb::shape::shape> s = ::scatdb::shape::shape::generate();
+					std::string str(in);
 					std::string desc;
 					std::shared_ptr<::scatdb::shape::shapeStorage_t> data(
 						new ::scatdb::shape::shapeStorage_t);
@@ -114,6 +134,7 @@ namespace scatdb
 					s->setDescription(desc);
 					s->setHeader(hdr);
 					s->setPoints(data);
+					return s;
 				}
 				void readHeader(const char* in, std::string &desc, size_t &np,
 					std::shared_ptr<::scatdb::shape::shapeHeaderStorage_t> hdr,
@@ -224,56 +245,143 @@ namespace scatdb
 					}
 					
 				}
-
-				/*
-				void shapefile::print(std::ostream &out) const
+				std::shared_ptr<::scatdb::shape::shape> readTextRaw(const char *iin)
 				{
 					using namespace std;
-					out << desc << endl;
-					out << numPoints << "\t= Number of lattice points" << endl;
-					out << a1(0) << "\t" << a1(1) << "\t" << a1(2);
+					auto res = scatdb::shape::shape::generate();
+					//Eigen::Vector3f crdsm, crdsi; // point location and diel entries
+					const char* pa = iin;
+					const char* pb = strchr(pa + 1, '\0');
+					const char* firstLineEnd = strchr(pa + 1, '\n');
+					// Attempt to guess the number of points based on the number of lines in the file.
+					int numPoints = std::count(pa, pb, '\n');
+					std::vector<long> parser_vals, firstLineVals; //(numPoints*8);
+					parser_vals.reserve(numPoints * 8);
+					parse_shapefile_entries(pa, pb, parser_vals);
+					parse_shapefile_entries(pa, firstLineEnd, firstLineVals);
+
+					size_t numCols = firstLineVals.size();
+					bool good = false;
+					if ((numCols == 3)) good = true;
+					if (!good) SDBR_throw(error::error_types::xBadInput)
+						.add<std::string>("Reason", "Unable to interpret input. Number of columns is not supported.")
+						.add<size_t>("numCols", numCols)
+						.add<std::string>("first-line", std::string(pa, firstLineEnd - pa))
+						.add<int>("numberOfPoints", numPoints);
+
+					if (parser_vals.size() == 0) SDBR_throw(error::error_types::xBadInput)
+						.add<std::string>("Reason", "Unable to parse dipoles.");
+					
+					if (numCols == 3) {
+						scatdb::shape::shapePointsOnly_t pts;
+						pts.resize(numPoints, 3);
+						for (size_t i = 0; i < numPoints; ++i)
+						{
+							// First field truly is a dummy variable. No correclation with point ordering at all.
+							//size_t pIndex = parser_vals[index].at(7 * i) - 1;
+							size_t pIndex = 3 * i;
+							auto crdsm = pts.block<1, 3>(i, 0);
+							for (size_t j = 0; j < 3; j++) 
+							{
+								float val = (float)parser_vals.at(pIndex + j);
+								crdsm(j) = val;
+							}
+						}
+
+						res->setPoints(pts);
+					}
+
+					return res;
+				}
+
+				void writeDDSCAT(const std::string &filename, ::scatdb::shape::shape_ptr p)
+				{
+					using namespace std;
+					std::ofstream out(filename.c_str());
+
+					out << p->getDescription() << endl;
+					out << p->numPoints() << "\t= Number of lattice points" << endl;
+					auto hdr = p->getHeader();
+					using namespace scatdb::shape::backends;
+					out << (*hdr)(A1, 0) << "\t" << (*hdr)(A1, 1) << "\t" << (*hdr)(A1, 2);
 					out << "\t= target vector a1 (in TF)" << endl;
-					out << a2(0) << "\t" << a2(1) << "\t" << a2(2);
+					out << (*hdr)(A2, 0) << "\t" << (*hdr)(A2, 1) << "\t" << (*hdr)(A2, 2);
 					out << "\t= target vector a2 (in TF)" << endl;
-					out << d(0) << "\t" << d(1) << "\t" << d(2);
+					out << (*hdr)(D, 0) << "\t" << (*hdr)(D, 1) << "\t" << (*hdr)(D, 2);
 					out << "\t= d_x/d  d_y/d  d_x/d  (normally 1 1 1)" << endl;
-					out << x0(0) << "\t" << x0(1) << "\t" << x0(2);
+					out << (*hdr)(X0, 0) << "\t" << (*hdr)(X0, 1) << "\t" << (*hdr)(X0, 2);
 					out << "\t= X0(1-3) = location in lattice of target origin" << endl;
 					out << "\tNo.\tix\tiy\tiz\tICOMP(x, y, z)" << endl;
 					//size_t i = 1;
 
-					std::vector<long> oi(numPoints * 7);
-
-					for (size_t j = 0; j < numPoints; j++)
+					std::vector<long> oi(p->numPoints() * 7);
+					auto pts = p->getPoints();
+					for (size_t j = 0; j < p->numPoints(); j++)
 					{
-						long point = latticeIndex(j);
-						auto it = latticePts.block<1, 3>(j, 0);
-						auto ot = latticePtsRi.block<1, 3>(j, 0);
-						oi[j * 7 + 0] = point;
-						oi[j * 7 + 1] = (long)(it)(0);
-						oi[j * 7 + 2] = (long)(it)(1);
-						oi[j * 7 + 3] = (long)(it)(2);
-						oi[j * 7 + 4] = (long)(ot)(0);
-						oi[j * 7 + 5] = (long)(ot)(1);
-						oi[j * 7 + 6] = (long)(ot)(2);
-
-						//out << "\t" << i << "\t";
-						//out << (it)(0) << "\t" << (it)(1) << "\t" << (it)(2) << "\t";
-						//out << (ot)(0) << "\t" << (ot)(1) << "\t" << (ot)(2);
-						//out << endl;
+						auto it = pts->block<1, 7>(j, 0);
+						oi[j * 7 + 0] = (long)(it)(0);
+						oi[j * 7 + 1] = (long)(it)(1);
+						oi[j * 7 + 2] = (long)(it)(2);
+						oi[j * 7 + 3] = (long)(it)(3);
+						oi[j * 7 + 4] = (long)(it)(4);
+						oi[j * 7 + 5] = (long)(it)(5);
+						oi[j * 7 + 6] = (long)(it)(6);
 					}
 
 					std::string generated;
 					std::back_insert_iterator<std::string> sink(generated);
 					if (!print_shapefile_entries(sink, oi))
 					{
-						// generating failed
-						cerr << "Generating failed\n";
-						throw;
+						SDBR_throw(error::error_types::xOtherError)
+							.add<std::string>("Reason", "Somehow unable to print the shape points properly.");
+					}
+					out << generated;
+				}
+				void writeTextRaw(const std::string &filename, ::scatdb::shape::shape_ptr p)
+				{
+					using namespace std;
+					std::ofstream out(filename.c_str());
+					std::vector<long> oi(p->numPoints() * 3);
+					scatdb::shape::shapePointsOnly_t pts;
+					p->getPoints(pts);
+					for (size_t j = 0; j < p->numPoints(); j++)
+					{
+						auto it = pts.block<1, 3>(j, 1);
+						oi[j * 7 + 0] = (long)(it)(0);
+						oi[j * 7 + 1] = (long)(it)(1);
+						oi[j * 7 + 2] = (long)(it)(2);
+					}
+
+					std::string generated;
+					std::back_insert_iterator<std::string> sink(generated);
+					if (!print_shapefile_pts(sink, oi))
+					{
+						SDBR_throw(error::error_types::xOtherError)
+							.add<std::string>("Reason", "Somehow unable to print the shape points properly.");
 					}
 					out << generated;
 				}
 
+				std::shared_ptr<::scatdb::shape::shape> readTextFile(
+					const std::string &filename) {
+					// Open the file and copy to a string. Check the first few lines to see if any
+					// alphanumeric characters are present. If there are, treat it as a DDSCAT file.
+					// Otherwise, treat as a raw text file.
+					std::ifstream in(filename.c_str());
+					std::ostringstream so;
+					boost::iostreams::copy(in, so);
+					std::string s = so.str();
+
+					auto end = s.find_first_of("\n\0");
+					if (std::string::npos == s.find_first_not_of("0123456789. \t\n", 0, end)) {
+						return readDDSCAT(s.c_str());
+					}
+					else {
+						return readTextRaw(s.c_str());
+					}
+				}
+
+				/*
 				void shapefile::recalcStats()
 				{
 					using namespace std;
