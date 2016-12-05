@@ -157,9 +157,9 @@ int main(int argc, char** argv) {
 			if (!ds) ds = 40.f;
 			bints(0, COL_ID) = shp->hash()->lower;
 			bints(0, COL_NUM_LATTICE) = (uint64_t)shp->numPoints();
-			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cfv = 0, vmu = 0, vms = 0, reffm = 0;
+			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cvol = 0, vmu = 0, vms = 0, reffm = 0;
 
-			shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cfv, reffm);
+			shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cvol, reffm);
 
 
 
@@ -177,9 +177,9 @@ int main(int argc, char** argv) {
 			bfloats(0, COL_MASS_KG) = cm;
 			bfloats(0, COL_FALLVEL_HW_UPPER) = vmu;
 			bfloats(0, COL_FALLVEL_HW_SFC) = vms;
-			bfloats(0, COL_FALLVEL_LH_UNRIMED) = 0.82f * std::pow(cmdm, 0.12f);
-			bfloats(0, COL_FALLVEL_LH_RIMED) = 0.79f * std::pow(cmdm, 0.27f);
-			bfloats(0, COL_VOLM3) = cfv;
+			bfloats(0, COL_FALLVEL_LH_UNRIMED) = 0.82f * std::pow(cmdm*1000.f, 0.12f);
+			bfloats(0, COL_FALLVEL_LH_RIMED) = 0.79f * std::pow(cmdm*1000.f, 0.27f);
+			bfloats(0, COL_VOLM3) = cvol;
 			bfloats(0, COL_REFF_UM) = reffm * 1000000.f;
 			id_sorter[snum].first = bfloats(0, COL_MD_M);
 			id_sorter[snum].second = snum;
@@ -443,14 +443,11 @@ int main(int argc, char** argv) {
 				NddMVLHR_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f
 					* binned_floats(bin, COL_B_FALLVEL_LH_RIMED) * binned_floats(bin, COL_B_MASS_KG);
 
-				S_HW_UPPER_mm_h += (rho_wat_g_m3 / rho_g_m3) // convert to liquid equivalent
-					* binned_floats(bin, COL_B_CONC_M_4) // m^-4
-					* binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f // m
-					* binned_floats(bin, COL_B_VOL_M_3) // m^3
-					* binned_floats(bin, COL_B_FALLVEL_HW_UPPER) // m/s
-					* 1000.f // mm in 1 m
-					* 3600.f // seconds in hour
-					;
+				S_HW_UPPER_mm_h += binned_floats(bin, COL_B_PARTIAL_S_HW_UPPER_MM_H);
+				S_HW_SFC_mm_h += binned_floats(bin, COL_B_PARTIAL_S_HW_SFC_MM_H);
+				S_LH_UNRIMED_mm_h += binned_floats(bin, COL_B_PARTIAL_S_LH_UNRIMED_MM_H);
+				S_LH_RIMED_mm_h += binned_floats(bin, COL_B_PARTIAL_S_LH_RIMED_MM_H);
+
 				IWC_g_m3_check += (pi / 6.f) * rho_g_m3 // g/m^3
 					* std::pow(binned_floats(bin, COL_B_MD_M), 3.f) // m^3
 					* binned_floats(bin, COL_B_CONC_M_4) // m^-4
