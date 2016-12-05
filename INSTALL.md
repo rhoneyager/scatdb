@@ -1,8 +1,8 @@
 ## Installing
 
-This library is tested on Debian, Fedora and Ubuntu Linux, as well as Microsoft Windows.
+This library is tested on Debian, Fedora and Ubuntu Linux, as well as Microsoft Windows and FreeBSD.
 
-**Note: Currently, it builds, but does not properly run, on Mac OS X and FreeBSD and OpenBSD.
+**Note: Currently, it builds, but does not properly run, on Mac OS X.
 This is a work in progress.**
 
 **Windows Note:**
