@@ -114,14 +114,22 @@ namespace scatdb {
 			void getEnvironmentConds(double alt_m, double temp_k, double &eta, double &P_air, double &rho_air, double &g) {
 				SDBR_log("shapeAlgs", logging::NOTIFICATION, "TODO: Finish implementation of getEnvironmentConds. Currently, "
 					"using results for US standard atmosphere (70s?) at 4 km altitude, -10.98 Celsius");
-				eta = 1.661e-5; // N . s / m^2
-				P_air = 6.166e4; // N/m^2
-				rho_air = 8.194e-1; // kg / m^3
-				g = 9.794; // m/s^2
+				if (alt_m > 20) {
+					eta = 1.661e-5; // N . s / m^2
+					P_air = 6.166e4; // N/m^2
+					rho_air = 8.194e-1; // kg / m^3
+					g = 9.794; // m/s^2
+				}
+				else {
+					eta = 1.983e-5;
+					P_air = 1e5;
+					rho_air = 1.225;
+					g = 9.81;
+				}
 			}
 			void getProjectedStats(shape_ptr p, double dSpacing, const std::string &dSpacingUnits,
 				float& mean_maxProjectedDimension_m, float& mean_projectedArea_m2,
-				float& mean_circAreaFrac_dimensionless, float &mass_Kg, float &v_mps,
+				float& mean_circAreaFrac_dimensionless, float &mass_Kg,
 				float &volumeM, float &reffM) {
 				Eigen::Array3f mpd, mpa, caf;
 				mpd.setZero();
@@ -148,13 +156,15 @@ namespace scatdb {
 				mean_projectedArea_m2 = mpa.mean();
 				mean_circAreaFrac_dimensionless = caf.mean();
 
+				
+			}
+			float getV_HW10_m_s(double rho_air, double mass_kg, double g,
+				double eta, double mean_circAreaFrac_dimensionless,
+				double mean_maxProjectedDimension_m) {
 				// Determine fall speed velocity (height assumed at 4 km, us standard 1976 atmosphere)
-				double eta, rho_air, delta_0 = 8, c_0 = 0.35, g, P_air, pi = 3.141592654;
-				// Look up eta, rho_air, g from table.
-				double alt_m = 4000., temp_k = 0;
-				getEnvironmentConds(alt_m, temp_k, eta, P_air, rho_air, g);
+				const double delta_0 = 8, c_0 = 0.35, pi = 3.141592654;
 
-				double v = sqrt(rho_air * 8 * mass_Kg*g / (c_0*pi*eta*eta*sqrt(mean_circAreaFrac_dimensionless)));
+				double v = sqrt(rho_air * 8 * mass_kg*g / (c_0*pi*eta*eta*sqrt(mean_circAreaFrac_dimensionless)));
 				v *= 4. / (delta_0 * delta_0);
 				v += 1.;
 				v = sqrt(v);
@@ -162,7 +172,7 @@ namespace scatdb {
 				v *= v;
 				v *= delta_0*delta_0 / 4.;
 				v *= eta / (rho_air * mean_maxProjectedDimension_m); // in m/s
-				v_mps = (float)v;
+				return (float)v;
 			}
 		}
 	}

@@ -97,7 +97,10 @@ int main(int argc, char** argv) {
 			COL_MD_M,
 			COL_PROJAREA,
 			COL_CIRCUMAREAFRAC,
-			COL_FALLVEL,
+			COL_FALLVEL_HW_UPPER,
+			COL_FALLVEL_HW_SFC,
+			COL_FALLVEL_LH_UNRIMED,
+			COL_FALLVEL_LH_RIMED,
 			COL_VOLM3,
 			COL_REFF_UM,
 			NUM_COLS_FLOATS
@@ -154,14 +157,29 @@ int main(int argc, char** argv) {
 			if (!ds) ds = 40.f;
 			bints(0, COL_ID) = shp->hash()->lower;
 			bints(0, COL_NUM_LATTICE) = (uint64_t)shp->numPoints();
-			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cfv = 0, vm = 0, reffm = 0;
-			shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cfv, vm, reffm);
+			float cmdm = 0, cpa = 0, ccaf = 0, cm = 0, cfv = 0, vmu = 0, vms = 0, reffm = 0;
+
+			shape::algorithms::getProjectedStats(shp, ds, "um", cmdm, cpa, ccaf, cm, cfv, reffm);
+
+
+
+			// Determine fall speed velocity (height assumed at 4 km, us standard 1976 atmosphere)
+			double eta, rho_air, g, P_air;
+			// Look up eta, rho_air, g from table.
+			shape::algorithms::getEnvironmentConds(4000., 0, eta, P_air, rho_air, g);
+			vmu = shape::algorithms::getV_HW10_m_s(rho_air, cm, g, eta, ccaf, cmdm);
+			shape::algorithms::getEnvironmentConds(0., 0, eta, P_air, rho_air, g);
+			vms = shape::algorithms::getV_HW10_m_s(rho_air, cm, g, eta, ccaf, cmdm);
+			
 			bfloats(0, COL_MD_M) = cmdm;
 			bfloats(0, COL_PROJAREA) = cpa;
 			bfloats(0, COL_CIRCUMAREAFRAC) = ccaf;
 			bfloats(0, COL_MASS_KG) = cm;
-			bfloats(0, COL_FALLVEL) = cfv;
-			bfloats(0, COL_VOLM3) = vm;
+			bfloats(0, COL_FALLVEL_HW_UPPER) = vmu;
+			bfloats(0, COL_FALLVEL_HW_SFC) = vms;
+			bfloats(0, COL_FALLVEL_LH_UNRIMED) = 0.82f * std::pow(cmdm, 0.12f);
+			bfloats(0, COL_FALLVEL_LH_RIMED) = 0.79f * std::pow(cmdm, 0.27f);
+			bfloats(0, COL_VOLM3) = cfv;
 			bfloats(0, COL_REFF_UM) = reffm * 1000000.f;
 			id_sorter[snum].first = bfloats(0, COL_MD_M);
 			id_sorter[snum].second = snum;
@@ -191,22 +209,25 @@ int main(int argc, char** argv) {
 		auto rawi = plugins::hdf5::addDatasetEigen(fsbase, "ints", sints);
 		auto rawf = plugins::hdf5::addDatasetEigen(fsbase, "floats", sfloats);
 		// These, for some reason, cause a problem.
-		plugins::hdf5::addAttr<std::string>(rawi, "col_0", std::string("COL_ID"));
-		plugins::hdf5::addAttr<std::string>(rawi, "col_1", std::string("COL_NUM_LATTICE"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_0", std::string("COL_MASS_KG"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_1", std::string("COL_MD_M"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_2", std::string("COL_PROJAREA_M2"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_3", std::string("COL_CIRCUMAREAFRAC"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_4", std::string("COL_FALLVEL_M_S"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_5", std::string("COL_VOLUME_M3"));
-		plugins::hdf5::addAttr<std::string>(rawf, "col_6", std::string("COL_REFF_UM"));
+		plugins::hdf5::addAttr<std::string>(rawi, "col_00", std::string("COL_ID"));
+		plugins::hdf5::addAttr<std::string>(rawi, "col_01", std::string("COL_NUM_LATTICE"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_00", std::string("COL_MASS_KG"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_01", std::string("COL_MD_M"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_02", std::string("COL_PROJAREA_M2"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_03", std::string("COL_CIRCUMAREAFRAC"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_04", std::string("COL_FALLVEL_HW_UPPER_M_S"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_05", std::string("COL_FALLVEL_HW_SFC_M_S"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_06", std::string("COL_FALLVEL_LH_UNRIMED_M_S"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_07", std::string("COL_FALLVEL_LH_RIMED_M_S"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_08", std::string("COL_VOLUME_M3"));
+		plugins::hdf5::addAttr<std::string>(rawf, "col_09", std::string("COL_REFF_UM"));
 		//return 99;
 		auto fprof = scatdb::plugins::hdf5::openOrCreateGroup(file, "per-profile");
 
 		cerr << "Iterating over the profiles, and writing to the summary table." << endl;
 		// Profile summary table
-		Eigen::Array<float, Eigen::Dynamic, 4> profloats;
-		profloats.resize((int)allprofiles->size(), 4);
+		Eigen::Array<float, Eigen::Dynamic, 10> profloats;
+		profloats.resize((int)allprofiles->size(), 10);
 		profloats.setZero();
 		// Iterate over the profiles
 		int pnum = 0;
@@ -240,12 +261,18 @@ int main(int argc, char** argv) {
 				COL_B_MD_M,
 				COL_B_PROJAREA,
 				COL_B_CIRCUMAREAFRAC,
-				COL_B_FALLVEL,
+				COL_B_FALLVEL_HW_UPPER,
+				COL_B_FALLVEL_HW_SFC,
+				COL_B_FALLVEL_LH_UNRIMED,
+				COL_B_FALLVEL_LH_RIMED,
 				COL_B_VOL_M_3,
 
 				COL_B_PARTIAL_IWC_G_M3,
 				COL_B_PARTIAL_IWC_G_M3_CHECK,
-				COL_B_PARTIAL_S_MM_H,
+				COL_B_PARTIAL_S_HW_UPPER_MM_H,
+				COL_B_PARTIAL_S_HW_SFC_MM_H,
+				COL_B_PARTIAL_S_LH_UNRIMED_MM_H,
+				COL_B_PARTIAL_S_LH_RIMED_MM_H,
 
 				COL_B_SHAPE_LOW,
 				COL_B_SHAPE_HIGH,
@@ -274,7 +301,7 @@ int main(int argc, char** argv) {
 				//	COL_MD_M,
 				//	COL_PROJAREA,
 				//	COL_CIRCUMAREAFRAC,
-				//	COL_FALLVEL,
+				//	COL_FALLVEL_HW_UPPER,
 				//	NUM_COLS_FLOATS
 				//};
 				using namespace boost::accumulators;
@@ -282,7 +309,7 @@ int main(int argc, char** argv) {
 				typedef accumulator_set<double, boost::accumulators::stats <
 					tag::mean
 				> > acc_type;
-				std::array<acc_type, 6> accs;
+				std::array<acc_type, 9> accs;
 				int count = 0;
 				// Push the data to the accumulator functions.
 				brow(0, COL_B_SHAPE_LOW) = (float) lastSortedShapeRow;
@@ -296,8 +323,11 @@ int main(int argc, char** argv) {
 					accs[1]((double)shpfloats(COL_MD_M));
 					accs[2]((double)shpfloats(COL_PROJAREA));
 					accs[3]((double)shpfloats(COL_CIRCUMAREAFRAC));
-					accs[4]((double)shpfloats(COL_FALLVEL));
-					accs[5]((double)shpfloats(COL_VOLM3));
+					accs[4]((double)shpfloats(COL_FALLVEL_HW_UPPER));
+					accs[5]((double)shpfloats(COL_FALLVEL_HW_SFC));
+					accs[6]((double)shpfloats(COL_FALLVEL_LH_UNRIMED));
+					accs[7]((double)shpfloats(COL_FALLVEL_LH_RIMED));
+					accs[8]((double)shpfloats(COL_VOLM3));
 					++count;
 				}
 				brow(0, COL_B_SHAPE_HIGH) = (float) lastSortedShapeRow;
@@ -307,8 +337,11 @@ int main(int argc, char** argv) {
 					brow(0, COL_B_MD_M) = (float)boost::accumulators::mean(accs[1]);
 					brow(0, COL_B_PROJAREA) = (float)boost::accumulators::mean(accs[2]);
 					brow(0, COL_B_CIRCUMAREAFRAC) = (float)boost::accumulators::mean(accs[3]);
-					brow(0, COL_B_FALLVEL) = (float)boost::accumulators::mean(accs[4]);
-					brow(0, COL_B_VOL_M_3) = (float)boost::accumulators::mean(accs[5]);
+					brow(0, COL_B_FALLVEL_HW_UPPER) = (float)boost::accumulators::mean(accs[4]);
+					brow(0, COL_B_FALLVEL_HW_SFC) = (float)boost::accumulators::mean(accs[5]);
+					brow(0, COL_B_FALLVEL_LH_UNRIMED) = (float)boost::accumulators::mean(accs[6]);
+					brow(0, COL_B_FALLVEL_LH_RIMED) = (float)boost::accumulators::mean(accs[7]);
+					brow(0, COL_B_VOL_M_3) = (float)boost::accumulators::mean(accs[8]);
 					brow(0, COL_B_PARTIAL_IWC_G_M3) = 
 						brow(0, COL_B_CONC_M_4) // m^-4
 						* brow(0, COL_B_BIN_WIDTH_MM) /1000.f // m
@@ -321,15 +354,35 @@ int main(int argc, char** argv) {
 						* brow(0, COL_B_BIN_WIDTH_MM)/1000.f // m
 						;
 
-					brow(0, COL_B_PARTIAL_S_MM_H) =
-						(rho_wat_g_m3 / rho_g_m3) // convert to liquid equivalent
+					brow(0, COL_B_PARTIAL_S_HW_UPPER_MM_H) =
+						brow(0, COL_B_MASS_KG) * 1000.f
+						/ rho_wat_g_m3
 						* brow(0, COL_B_CONC_M_4) // m^-4
 						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
-						* brow(0, COL_B_VOL_M_3) // m^3
-						* brow(0, COL_B_FALLVEL) // m/s
-						* 1000.f // mm in 1 m
-						* 3600.f // seconds in hour
-						;
+						* brow(0, COL_B_FALLVEL_HW_UPPER) // m/s
+						* 3600.f;
+					brow(0, COL_B_PARTIAL_S_HW_SFC_MM_H) =
+						brow(0, COL_B_MASS_KG) * 1000.f
+						/ rho_wat_g_m3
+						* brow(0, COL_B_CONC_M_4) // m^-4
+						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
+						* brow(0, COL_B_FALLVEL_HW_SFC) // m/s
+						* 3600.f;
+					brow(0, COL_B_PARTIAL_S_LH_UNRIMED_MM_H) =
+						brow(0, COL_B_MASS_KG) * 1000.f
+						/ rho_wat_g_m3
+						* brow(0, COL_B_CONC_M_4) // m^-4
+						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
+						* brow(0, COL_B_FALLVEL_LH_UNRIMED) // m/s
+						* 3600.f;
+					brow(0, COL_B_PARTIAL_S_LH_RIMED_MM_H) =
+						brow(0, COL_B_MASS_KG) * 1000.f
+						/ rho_wat_g_m3
+						* brow(0, COL_B_CONC_M_4) // m^-4
+						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
+						* brow(0, COL_B_FALLVEL_LH_RIMED) // m/s
+						* 3600.f;
+
 				}
 			}
 			cerr << endl << "\t\tCalculating average quantities." << endl;
@@ -344,46 +397,57 @@ int main(int argc, char** argv) {
 			plugins::hdf5::addAttr<std::string>(dbf, "col_07", std::string("COL_B_MD_M"));
 			plugins::hdf5::addAttr<std::string>(dbf, "col_08", std::string("COL_B_PROJAREA"));
 			plugins::hdf5::addAttr<std::string>(dbf, "col_09", std::string("COL_B_CIRCUMAREAFRAC"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_10", std::string("COL_B_FALLVEL"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_11", std::string("COL_B_VOL_M_3"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_12", std::string("COL_B_PARTIAL_IWC_G_M3"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_13", std::string("COL_B_PARTIAL_IWC_G_M3_CHECK"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_14", std::string("COL_B_PARTIAL_S_MM_H"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_15", std::string("COL_B_SHAPE_LOW"));
-			plugins::hdf5::addAttr<std::string>(dbf, "col_16", std::string("COL_B_SHAPE_HIGH"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_10", std::string("COL_B_FALLVEL_HW_UPPER"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_11", std::string("COL_B_FALLVEL_HW_SFC"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_12", std::string("COL_B_FALLVEL_LH_UNRIMED"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_13", std::string("COL_B_FALLVEL_LH_RIMED"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_14", std::string("COL_B_VOL_M_3"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_15", std::string("COL_B_PARTIAL_IWC_G_M3"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_16", std::string("COL_B_PARTIAL_IWC_G_M3_CHECK"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_17", std::string("COL_B_PARTIAL_S_HW_UPPER_MM_H"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_18", std::string("COL_B_PARTIAL_S_HW_SFC_MM_H"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_19", std::string("COL_B_PARTIAL_S_LH_UNRIMED_MM_H"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_20", std::string("COL_B_PARTIAL_S_LH_RIMED_MM_H"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_21", std::string("COL_B_SHAPE_LOW"));
+			plugins::hdf5::addAttr<std::string>(dbf, "col_22", std::string("COL_B_SHAPE_HIGH"));
 
 			// Calculate the bulk and mass-weighted quantities. Write these also.
 			
 			// Mass-weighted fall velocity [m/s], #-weighted fall velocity
 			// Snowfall rate [mm/h]
 			// Ice water content [g/m^3]
-			float v_mass_weighted_m_s = 0,
-				  v_num_weighted_m_s = 0,
-				  S_mm_h = 0,
+			float v_HW_UPPER_mass_weighted_m_s = 0,
+				v_HW_SFC_mass_weighted_m_s = 0,
+				v_LH_UNRIMED_mass_weighted_m_s = 0,
+				v_LH_RIMED_mass_weighted_m_s = 0,
+				  S_HW_UPPER_mm_h = 0,
+				  S_HW_SFC_mm_h = 0,
+				  S_LH_UNRIMED_mm_h = 0,
+				  S_LH_RIMED_mm_h = 0,
 				  IWC_g_m3 = 0,
 				  IWC_g_m3_check = 0;
-			float Ndd_m_3 = 0, NddV_m_3_m_s = 0, NddM_m_3_kg = 0, NddMV_m_3_kg_m_s = 0;
+			float Ndd_m_3 = 0, NddV_m_3_m_s = 0, NddM_m_3_kg = 0, 
+				NddMVHWU_m_3_kg_m_s = 0, NddMVHWS_m_3_kg_m_s = 0,
+				NddMVLHU_m_3_kg_m_s = 0, NddMVLHR_m_3_kg_m_s = 0;
 
 			for (int bin = 0; bin < binned_floats.rows(); ++bin) {
 				Ndd_m_3 += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f;
-				NddV_m_3_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_FALLVEL);
+				NddV_m_3_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_FALLVEL_HW_UPPER);
 				NddM_m_3_kg += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_MASS_KG);
-				NddMV_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f * binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_MASS_KG);
+				NddMVHWU_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f
+					* binned_floats(bin, COL_B_FALLVEL_HW_UPPER) * binned_floats(bin, COL_B_MASS_KG);
+				NddMVHWS_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f
+					* binned_floats(bin, COL_B_FALLVEL_HW_SFC) * binned_floats(bin, COL_B_MASS_KG);
+				NddMVLHU_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f
+					* binned_floats(bin, COL_B_FALLVEL_LH_UNRIMED) * binned_floats(bin, COL_B_MASS_KG);
+				NddMVLHR_m_3_kg_m_s += binned_floats(bin, COL_B_CONC_M_4) * binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f
+					* binned_floats(bin, COL_B_FALLVEL_LH_RIMED) * binned_floats(bin, COL_B_MASS_KG);
 
-				/*
-				S_mm_h += 0.6f * pi
-					* binned_floats(bin, COL_B_FALLVEL) * binned_floats(bin, COL_B_CONC_M_4) // (m/s) * (m^-4)
-					* std::pow(binned_floats(bin, COL_B_BIN_MID_MM), 3.f) * binned_floats(bin, COL_B_BIN_WIDTH_MM) // mm^3 * mm
-					* (3600.f) // 3600 s in 1 h
-					* 1000.f // 1000 mm in 1 m
-					* (float) (1e-12) // (mm/m) ^ 4 conversion
-					;
-					*/
-				S_mm_h += (rho_wat_g_m3 / rho_g_m3) // convert to liquid equivalent
+				S_HW_UPPER_mm_h += (rho_wat_g_m3 / rho_g_m3) // convert to liquid equivalent
 					* binned_floats(bin, COL_B_CONC_M_4) // m^-4
 					* binned_floats(bin, COL_B_BIN_WIDTH_MM) / 1000.f // m
 					* binned_floats(bin, COL_B_VOL_M_3) // m^3
-					* binned_floats(bin, COL_B_FALLVEL) // m/s
+					* binned_floats(bin, COL_B_FALLVEL_HW_UPPER) // m/s
 					* 1000.f // mm in 1 m
 					* 3600.f // seconds in hour
 					;
@@ -399,33 +463,52 @@ int main(int argc, char** argv) {
 					;
 			}
 			//v_num_weighted_m_s = NddV_m_3_m_s / Ndd_m_3;
-			v_mass_weighted_m_s = NddMV_m_3_kg_m_s / NddM_m_3_kg;
-			// nan checks for hdf5 write. NaNs may occur when debugging, when certain code branches are disabled.
-			if (v_mass_weighted_m_s != v_mass_weighted_m_s) v_mass_weighted_m_s = -1;
-			//if (v_num_weighted_m_s != v_num_weighted_m_s) v_num_weighted_m_s = -1;
-			if (S_mm_h != S_mm_h) S_mm_h = -1;
+			v_HW_UPPER_mass_weighted_m_s = NddMVHWU_m_3_kg_m_s / NddM_m_3_kg;
+			v_HW_SFC_mass_weighted_m_s = NddMVHWS_m_3_kg_m_s / NddM_m_3_kg;
+			v_LH_UNRIMED_mass_weighted_m_s = NddMVLHU_m_3_kg_m_s / NddM_m_3_kg;
+			v_LH_RIMED_mass_weighted_m_s = NddMVLHR_m_3_kg_m_s / NddM_m_3_kg;
+
+			if (S_HW_UPPER_mm_h != S_HW_UPPER_mm_h) S_HW_UPPER_mm_h = -1;
 			if (IWC_g_m3 != IWC_g_m3) IWC_g_m3 = -1;
 			if (IWC_g_m3_check != IWC_g_m3_check) IWC_g_m3_check = -1;
 
 
-			plugins::hdf5::addAttr<float>(fpro, "v_mass_weighted_m_s", v_mass_weighted_m_s);
+			plugins::hdf5::addAttr<float>(fpro, "v_HW_UPPER_mass_weighted_m_s", v_HW_UPPER_mass_weighted_m_s);
+			plugins::hdf5::addAttr<float>(fpro, "v_HW_SFC_mass_weighted_m_s", v_HW_SFC_mass_weighted_m_s);
+			plugins::hdf5::addAttr<float>(fpro, "v_LH_UNRIMED_mass_weighted_m_s", v_LH_UNRIMED_mass_weighted_m_s);
+			plugins::hdf5::addAttr<float>(fpro, "v_LH_RIMED_mass_weighted_m_s", v_LH_RIMED_mass_weighted_m_s);
 			//plugins::hdf5::addAttr<float>(fpro, "v_num_weighted_m_s", v_num_weighted_m_s);
-			plugins::hdf5::addAttr<float>(fpro, "S_mm_h", S_mm_h);
+			plugins::hdf5::addAttr<float>(fpro, "S_HW_UPPER_mm_h", S_HW_UPPER_mm_h);
+			plugins::hdf5::addAttr<float>(fpro, "S_HW_SFC_mm_h", S_HW_SFC_mm_h);
+			plugins::hdf5::addAttr<float>(fpro, "S_LH_UNRIMED_mm_h", S_LH_UNRIMED_mm_h);
+			plugins::hdf5::addAttr<float>(fpro, "S_LH_RIMED_mm_h", S_LH_RIMED_mm_h);
 			plugins::hdf5::addAttr<float>(fpro, "IWC_g_m3", IWC_g_m3);
 			plugins::hdf5::addAttr<float>(fpro, "IWC_g_m3_check", IWC_g_m3_check);
 			// And add to the summary table
-			profloats(pnum - 1, 0) = S_mm_h;
-			profloats(pnum - 1, 1) = IWC_g_m3;
-			profloats(pnum - 1, 2) = IWC_g_m3_check;
-			profloats(pnum - 1, 3) = v_mass_weighted_m_s;
+			profloats(pnum - 1, 0) = S_HW_UPPER_mm_h;
+			profloats(pnum - 1, 1) = S_HW_SFC_mm_h;
+			profloats(pnum - 1, 2) = S_LH_UNRIMED_mm_h;
+			profloats(pnum - 1, 3) = S_LH_RIMED_mm_h;
+			profloats(pnum - 1, 4) = IWC_g_m3;
+			profloats(pnum - 1, 5) = IWC_g_m3_check;
+			profloats(pnum - 1, 6) = v_HW_UPPER_mass_weighted_m_s;
+			profloats(pnum - 1, 7) = v_HW_SFC_mass_weighted_m_s;
+			profloats(pnum - 1, 8) = v_LH_UNRIMED_mass_weighted_m_s;
+			profloats(pnum - 1, 9) = v_LH_RIMED_mass_weighted_m_s;
 			//profloats(pnum - 1, 4) = v_num_weighted_m_s;
 		}
 		cerr << "All profiles done. Writing summary table and exiting." << endl;
 		auto dbps = plugins::hdf5::addDatasetEigen(file, "profile_summary", profloats);
-		plugins::hdf5::addAttr<std::string>(dbps, "col_0", std::string("S_mm_h"));
-		plugins::hdf5::addAttr<std::string>(dbps, "col_1", std::string("IWC_g_m3"));
-		plugins::hdf5::addAttr<std::string>(dbps, "col_2", std::string("IWC_g_m3_check"));
-		plugins::hdf5::addAttr<std::string>(dbps, "col_3", std::string("v_mass_weighted_m_s"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_00", std::string("S_HW_UPPER_mm_h"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_01", std::string("S_HW_SFC_mm_h"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_02", std::string("S_LH_UNRIMED_mm_h"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_03", std::string("S_LH_RIMED_mm_h"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_04", std::string("IWC_g_m3"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_05", std::string("IWC_g_m3_check"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_06", std::string("v_HW_UPPER_mass_weighted_m_s"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_07", std::string("v_HW_SFC_mass_weighted_m_s"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_08", std::string("v_LH_UNRIMED_mass_weighted_m_s"));
+		plugins::hdf5::addAttr<std::string>(dbps, "col_09", std::string("v_LH_RIMED_mass_weighted_m_s"));
 		//plugins::hdf5::addAttr<std::string>(dbps, "col_4", std::string("v_num_weighted_m_s"));
 
 	}
