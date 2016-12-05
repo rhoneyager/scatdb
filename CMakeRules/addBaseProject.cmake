@@ -62,5 +62,14 @@ ENDIF()
     endif()
     #message("${configappend}")
 
+EXEC_PROGRAM(uname OUTPUT_VARIABLE SYSTEM_NAME)
+set (OS_DEP_LIBS )
+SET(SYSTEM_NAME "${SYSTEM_NAME}" CACHE INTERNAL "")
+IF(SYSTEM_NAME STREQUAL "Linux")
+ENDIF(SYSTEM_NAME STREQUAL "Linux")
+IF(SYSTEM_NAME STREQUAL "FreeBSD")
+	set (OS_DEP_LIBS ${OS_DEP_LIBS} procstat)
+ENDIF(SYSTEM_NAME STREQUAL "FreeBSD")
+
 endmacro(addBaseProject)
 

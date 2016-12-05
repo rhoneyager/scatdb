@@ -64,7 +64,7 @@ namespace scatdb
 				;
 			
 			hidden.add_options()
-				("scatdb-version", "Print Ryan_Debug library version information and exit")
+				("scatdb-version", "Print scatdb library version information and exit")
 				("help-all", "Print out all possible program options")
 				("help-full", "Print out all possible program options")
 				("close-on-finish", po::value<bool>(), "Should the app automatically close on termination?")
@@ -142,7 +142,8 @@ namespace scatdb
 			SDBR_log("dll", ::scatdb::logging::NORMAL, 
 				"Starting application: \n"
 				<< "\tName: " << appName
-				<< "\n\tPath: " << appPath
+				<< "\n\tApp Path: " << appPath
+				<< "\n\tLib Path: " << hp->pInfo->libpath
 				<< "\n\tCWD: " << cwd
 				<< "\n\tApp config dir: " << hp->appConfigDir
 				<< "\n\tUsername: " << hp->username
@@ -184,7 +185,10 @@ namespace scatdb
 
 			if (vm.count("scatdb-version"))
 			{
-				std::cerr << spreambles;
+				std::cerr << spreambles
+					<< "Loaded modules:\n";
+				enumModules(getPID(), std::cerr);
+
 				exit(2);
 			}
 

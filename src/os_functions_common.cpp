@@ -24,7 +24,12 @@
 #ifdef __unix__
 #include <dlfcn.h>
 #include <link.h>
+#ifdef SDBR_OS_LINUX
 #include "../private/os_functions_linux.hpp"
+#endif
+#ifdef SDBR_OS_UNIX
+#include "../private/os_functions_freebsd.hpp"
+#endif
 #endif
 
 namespace scatdb {
@@ -54,9 +59,16 @@ namespace scatdb {
 #ifdef _WIN32
 			return win::pidExists(pid);
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			return linux::pidExists(pid);
 #endif
+#ifdef SDBR_OS_UNIX
+			return bsd::pidExists(pid);
+#endif
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason", "Unable to check if a pid exists. "
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
 			return false;
 		}
 
@@ -103,9 +115,18 @@ namespace scatdb {
 #ifdef _WIN32
 			return win::waitOnExitForce();
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			return linux::waitOnExitForce();
 #endif
+#ifdef SDBR_OS_UNIX
+			return bsd::waitOnExitForce();
+#endif
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+			return false;
+
 		}
 
 		/// Returns the PID of the running process
@@ -114,9 +135,17 @@ namespace scatdb {
 #ifdef _WIN32
 			return win::getPID();
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			return linux::getPID();
 #endif
+#ifdef SDBR_OS_UNIX
+			return bsd::getPID();
+#endif
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+			return -1;
 		}
 
 		/// Returns the PID of the parent of a given process
@@ -125,9 +154,18 @@ namespace scatdb {
 #ifdef _WIN32
 			return win::getPPID(pid);
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			return linux::getPPID(pid);
 #endif
+#ifdef SDBR_OS_UNIX
+			return bsd::getPPID(pid);
+#endif
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+			return -1;
+
 		}
 		
 		/// \todo Finish implementation using Windows and Linux system calls.
@@ -188,8 +226,17 @@ namespace scatdb {
 #ifdef _WIN32
 			string currentPath = win::GetModulePath();
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			string currentPath = linux::GetModulePath();
+#endif
+#ifdef SDBR_OS_UNIX
+			string currentPath = bsd::GetModulePath();
+#endif
+#ifdef SDBR_OS_UNSUPPORTED
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
 #endif
 			
 			out << "Active location: " << currentPath << endl;
@@ -219,9 +266,19 @@ namespace scatdb {
 #ifdef _WIN32
 			return win::getInfo(pid);
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			return linux::getInfo(pid);
 #endif
+#ifdef SDBR_OS_UNIX
+			return bsd::getInfo(pid);
+#endif
+#ifdef SDBR_OS_UNSUPPORTED
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+#endif
+			return nullptr;
 		}
 
 		currentAppInfo_p getCurrentAppInfo() {
@@ -233,12 +290,27 @@ namespace scatdb {
 			res->hostname = win::getHostname();
 			res->username = win::getUsername();
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			res->appConfigDir = linux::getAppConfigDir();
 			res->homeDir = linux::getHomeDir();
 			res->hostname = linux::getHostname();
 			res->username = linux::getUsername();
 #endif
+#ifdef SDBR_OS_UNIX
+			res->appConfigDir = bsd::getAppConfigDir();
+			res->homeDir = bsd::getHomeDir();
+			res->hostname = bsd::getHostname();
+			res->username = bsd::getUsername();
+#endif
+#ifdef SDBR_OS_UNSUPPORTED
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+#endif
+
+
+
 			res->pInfo = getProcessInfo(getPID());
 			std::shared_ptr<versioning::versionInfo> vl(new versioning::versionInfo);
 			versioning::getLibVersionInfo(*(vl.get()));
@@ -251,9 +323,19 @@ namespace scatdb {
 #ifdef _WIN32
 			return win::getModuleInfo(func);
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			return linux::getModuleInfo(func);
 #endif
+#ifdef SDBR_OS_UNIX
+			return bsd::getModuleInfo(func);
+#endif
+#ifdef SDBR_OS_UNSUPPORTED
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+#endif
+			return nullptr;
 		}
 
 		/// Enumerate the modules in a given process.
@@ -261,9 +343,19 @@ namespace scatdb {
 #ifdef _WIN32
 			win::enumModules(pid, out);
 #endif
-#ifdef __unix__
+#ifdef SDBR_OS_LINUX
 			linux::enumModules(pid, out);
 #endif
+#ifdef SDBR_OS_UNIX
+			bsd::enumModules(pid, out);
+#endif
+#ifdef SDBR_OS_UNSUPPORTED
+			SDBR_throw(scatdb::error::error_types::xUnimplementedFunction)
+				.add<std::string>("Reason",
+				"Either the OS-detection code is not working at build, or "
+				"the code for your OS is not yet written.");
+#endif
+	
 		}
 
 	}
@@ -278,10 +370,19 @@ std::ostream & operator<<(std::ostream &stream, const scatdb::debug::processInfo
 	stream << "\tName:\t" << obj.name << endl;
 	stream << "\tPID:\t" << obj.pid << endl;
 	stream << "\tPPID:\t" << obj.ppid << endl;
-	stream << "\tPath:\t" << obj.path << endl;
+	stream << "\tApp Path:\t" << obj.path << endl;
+	stream << "\tLib Path:\t" << obj.libpath << endl;
 	stream << "\tCWD:\t" << obj.cwd << endl;
-	stream << "\tCmd Line:\t" << obj.cmdline << endl;
-	stream << "\tStart:\t" << obj.startTime << endl;
+	const std::vector<std::string> &mCmd = obj.expandedCmd;
+	std::string sCmdP;
+	for (auto it = mCmd.begin(); it != mCmd.end(); ++it) {
+		if (it != mCmd.begin()) sCmdP.append(" ");
+		else sCmdP.append("\t");
+		sCmdP.append(*it);
+	}
+
+	stream << "\tCmd Line:\t" << sCmdP << endl;
+	//stream << "\tStart:\t" << obj.startTime << endl;
 	// stream << "\tEnviron:\n";
 	// TODO: parse and write the environment
 

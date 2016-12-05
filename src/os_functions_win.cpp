@@ -463,7 +463,10 @@ namespace scatdb {
 				getPathWIN32((DWORD)pid, filepath, filename); // int always fits in DWORD
 				res->name = filename.string();
 				res->path = filepath.string();
-				res->startTime;
+				moduleInfo_p mdll = getModuleInfo((void*)(getInfo));
+				res->libpath = mdll->path;
+
+				//res->startTime;
 
 				int mypid = getPID();
 				if (pid == mypid || IsAppRunningAsAdminMode())
@@ -490,11 +493,11 @@ namespace scatdb {
 					res->environ = std::string(nstring, nstring+newsize);
 					*/
 					//#else
-					res->environment = std::string(penv, pend);
+					std::string environment = std::string(penv, pend);
 					//#endif
 					FreeEnvironmentStrings(penv);
 
-					res->cmdline = std::string(GetCommandLine());
+					std::string cmdline = std::string(GetCommandLine());
 					
 					int nArgs;
 					LPWSTR *szArglist;
@@ -541,12 +544,12 @@ namespace scatdb {
 				outCreation << pCreationLocal.wYear << "-" << pCreationLocal.wMonth << "-" << pCreationLocal.wDay << " "
 					<< pCreationLocal.wHour << ":" << pCreationLocal.wMinute << ":" << pCreationLocal.wSecond << "."
 					<< pCreationLocal.wMilliseconds;
-				res->startTime = outCreation.str();
+				//res->startTime = outCreation.str();
 
 				CloseHandle(h);
 
-				scatdb::splitSet::splitNullMap(res->environment, res->expandedEnviron);
-				scatdb::splitSet::splitNullVector(res->cmdline, res->expandedCmd);
+				scatdb::splitSet::splitNullMap(environment, res->expandedEnviron);
+				scatdb::splitSet::splitNullVector(cmdline, res->expandedCmd);
 				return res;
 			}
 

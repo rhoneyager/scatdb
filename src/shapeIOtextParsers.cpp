@@ -262,7 +262,7 @@ namespace scatdb
 
 					size_t numCols = firstLineVals.size();
 					bool good = false;
-					if ((numCols == 3)) good = true;
+					if (numCols == 3) good = true;
 					if (!good) SDBR_throw(error::error_types::xBadInput)
 						.add<std::string>("Reason", "Unable to interpret input. Number of columns is not supported.")
 						.add<size_t>("numCols", numCols)

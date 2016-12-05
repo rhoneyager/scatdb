@@ -22,6 +22,8 @@ namespace scatdb {
 			tryBool(V_AMD64);
 			tryBool(V_X64);
 			tryBool(V_UNIX);
+			tryBool(V_LINUX);
+			tryBool(V_BSD);
 			tryBool(V_APPLE);
 			tryBool(V_WIN32);
 			tryStr(vboost);
@@ -99,6 +101,8 @@ namespace scatdb {
 			if (bools == V_AMD64) return std::string("V_AMD64");
 			if (bools == V_X64) return std::string("V_X64");
 			if (bools == V_UNIX) return std::string("V_UNIX");
+			if (bools == V_LINUX) return std::string("V_LINUX");
+			if (bools == V_BSD) return std::string("V_BSD");
 			if (bools == V_APPLE) return std::string("V_APPLE");
 			if (bools == V_WIN32) return std::string("V_WIN32");
 			if (bools == V_LLVM) return std::string("V_LLVM");
@@ -153,6 +157,8 @@ namespace scatdb {
 			else out << "OpenMP disabled in Compiler" << std::endl;
 			if (v.vb[versionInfo::V_AMD64] || v.vb[versionInfo::V_X64]) out << "64-bit build" << std::endl;
 			if (v.vb[versionInfo::V_UNIX]) out << "Unix / Linux Compile" << std::endl;
+			if (v.vb[versionInfo::V_BSD]) out << "Unix Compile" << std::endl;
+			if (v.vb[versionInfo::V_LINUX]) out << "Linux Compile" << std::endl;
 			if (v.vb[versionInfo::V_APPLE]) out << "Mac Os X Compile" << std::endl;
 			if (v.vb[versionInfo::V_WIN32]) out << "Windows Compile" << std::endl;
 

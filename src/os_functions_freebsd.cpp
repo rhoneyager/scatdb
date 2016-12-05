@@ -1,4 +1,5 @@
-#ifdef __linux__
+#include "../scatdb/defs.hpp"
+#ifdef SDBR_OS_UNIX
 #include <boost/shared_array.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -22,32 +23,56 @@
 
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/user.h>
+#include <sys/sysctl.h>
+#include <libutil.h>
+#include <libprocstat.h>
 #include <pwd.h>
 #include <dlfcn.h>
 #include <link.h>
 #include <cstring>
 #include <errno.h>
-#include "../private/os_functions_linux.hpp"
+#include "../private/os_functions_freebsd.hpp"
 
 namespace scatdb{
 	namespace debug {
 
-		namespace linux {
-			namespace vars {
-				
-			}
+		namespace bsd {
 			
 			using namespace ::scatdb::debug::vars;
 			bool pidExists(int pid)
 			{
-				// Need to check existence of directory /proc/pid
-				std::ostringstream pname;
-				pname << "/proc/" << pid;
-				using namespace boost::filesystem;
-				path p(pname.str().c_str());
-				if (exists(p)) return true;
+				int i, mib[4];
+				size_t len;
+				struct kinfo_proc kp;
+
+				/* Fill out the first three components of the mib */
+				len = 4;
+				sysctlnametomib("kern.proc.pid", mib, &len);
+				mib[3] = pid;
+				len = sizeof(kp);
+				int res = sysctl(mib, 4, &kp, &len, NULL, 0);
+				if (res == -1) {
+					// Either the pid does not exist, or some other error
+					int err = errno;
+					if (err == ENOENT) return false;
+					const int buflen = 200;
+					char strerrbuf[buflen] = "\0";
+					// strerror_r will always yield a null-terminated string.
+					int ebufres = strerror_r(err, strerrbuf, buflen);
+					SDBR_throw(::scatdb::error::error_types::xBadInput)
+					.add<int>("pid", pid)
+					.add<std::string>("Description", "When attempting to "
+						"determine if a PID exists, an unhandled error occurred.")
+					.add<int>("errno", err)
+					.add<std::string>("Error_Description", std::string(strerrbuf));
+					;
+				}
+				else if ((res == 0) && (len > 0))
+					return true;
 				return false;
 			}
+
 			bool waitOnExitForce() { return false; }
 
 			int getPID()
@@ -189,53 +214,86 @@ namespace scatdb{
 					.add<int>("pid", pid)
 					.add<std::string>("Description", "PID does not exist.");
 				res->ppid = getPPID(pid);
-				std::string cmdline;
-				std::string environment;
+				struct kinfo_proc *proc = kinfo_getproc(pid);
+				if (!proc)
+					SDBR_throw(::scatdb::error::error_types::xBadInput)
+						.add<int>("pid", pid)
+						.add<std::string>("Description", "Cannot get kinfo_proc "
+							"structure for this pid, but the process does exist.");
+				res->name = std::string(proc->ki_comm);
+				// TODO: fix to get absolute path
+				// TODO: also fix getUsername
+				// TODO: getHomeDir also is wrong (should resolve symlink).
+				//	 Affects app config dir also.
+				struct procstat * pss = procstat_open_sysctl();
+				if (!pss) SDBR_throw(::scatdb::error::error_types::xBadInput)
+					.add<std::string>("Reason", "Cannot open procstat structure.");
+				const int nchr = 65535;
+				char *errbuf;
+				char pathname[nchr] = "\0";
+
+				char** argv = procstat_getargv(pss, proc, 0);
+				if (!argv) SDBR_throw(::scatdb::error::error_types::xBadInput)
+					.add<std::string>("Reason", "Cannot get argv.");
+				// Should process immediately in case of buffer re-use.
+				int i=0;
+				while (argv[i]) {
+					res->expandedCmd.push_back(std::string(argv[i]));
+					++i;
+				}
+				if (argv) procstat_freeargv(pss);
+
+
+				char** envv = procstat_getenvv(pss, proc, 0);
+				if (!envv) SDBR_throw(::scatdb::error::error_types::xBadInput)
+					.add<std::string>("Reason", "Cannot get envv.");
+				i=0;
+				while (envv[i]) {
+					splitSet::splitNullMap(std::string(envv[i]), res->expandedEnviron);
+					//res->expandedEnviron.push_back(std::string(envv[i]));
+					++i;
+				}
+				if (envv) procstat_freeenvv(pss);
+
+				int r3 = procstat_getpathname(pss, proc, pathname, nchr);
+				if (r3) SDBR_throw(::scatdb::error::error_types::xBadInput)
+					.add<std::string>("Reason", "procstat_getpathname failed")
+					.add<int>("rval", r3)
+					.add<std::string>("returned-pathname", std::string(pathname));
+
+				res->path = std::string(pathname);
+				char cwd[nchr] = "\0";
+				char *cwdres = getcwd(cwd, nchr);
+				if (!cwdres) SDBR_throw(::scatdb::error::error_types::xBadInput)
+					.add<std::string>("Reason", "getcwd failed")
+					;
+				res->cwd = std::string(cwd);
+				res->argv_v = res->expandedCmd;
+				//res->startTime = "UNIMPLEMENTED";
+				moduleInfo_p mdll = getModuleInfo((void*)(getInfo));
+				res->libpath = mdll->path;
+freeAllocs:
+				if (proc) free(proc);
+				if (pss) procstat_close(pss);
+
 				{
-					using namespace boost::filesystem;
-					using namespace std;
-					ostringstream procpath;
-					procpath << "/proc/" << pid;
-					string sp = procpath.str();
-					// exe and cwd are symlinks. Read them.
-					// path = exe. executable name is the file name from the path.
-					path pp(sp);
-					path pexe = pp / "exe";
-					path pcwd = pp / "cwd";
-
-					path psexe = read_symlink(pexe);
-					path pscwd = read_symlink(pcwd);
-					path pexename = psexe.filename();
-
-					res->name = pexename.string();
-					res->path = psexe.string();
-					res->cwd = pscwd.string();
-
-					// environ and cmdline can be read as files
-					// both internally use null-terminated strings
-					// TODO: figure out what to do with this.
-					path pcmd(pp / "cmdline");
+					/*
 					std::ifstream scmdline(pcmd.string().c_str());
 					const int length = 1024;
 					char *buffer = new char[length];
 					while (scmdline.good())
 					{
 						scmdline.read(buffer, length);
-						cmdline.append(buffer, scmdline.gcount());
+						res->cmdline.append(buffer, scmdline.gcount());
 						res->argv_v.push_back(std::string(buffer));
 					}
-					//scmdline >> res->cmdline;
-					// Replace command-line null symbols with spaces
-					//std::replace(res->cmdline.begin(),res->cmdline.end(),
-					//		'\0', ' ');
 
-					path penv(pp / "environ");
 					std::ifstream senviron(penv.string().c_str());
 
 					while (senviron.good())
 					{
 						senviron.read(buffer, length);
-						environment.append(buffer, senviron.gcount());
+						res->environment.append(buffer, senviron.gcount());
 					}
 					// Replace environment null symbols with newlines
 					//std::replace(res->environment.begin(),res->environment.end(),
@@ -243,16 +301,13 @@ namespace scatdb{
 					delete[] buffer;
 
 					// start time is the timestamp of the /proc/pid folder.
-					//std::time_t st = last_write_time(pp);
-					//string ct(ctime(&st));
-					//res->startTime = ct;
-
+					std::time_t st = last_write_time(pp);
+					string ct(ctime(&st));
+					res->startTime = ct;
+					*/
 				}
-				moduleInfo_p mdll = getModuleInfo((void*)(getInfo));
-				res->libpath = mdll->path;
-
-				scatdb::splitSet::splitNullMap(environment, res->expandedEnviron);
-				scatdb::splitSet::splitNullVector(cmdline, res->expandedCmd);
+				//scatdb::splitSet::splitNullMap(environment, res->expandedEnviron);
+				//scatdb::splitSet::splitNullVector(cmdline, res->expandedCmd);
 				return res;
 			}
 

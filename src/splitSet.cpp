@@ -366,7 +366,7 @@ namespace scatdb {
 			const std::string &instr, std::vector<std::string> &out, char delim)
 		{
 			using namespace std;
-			out.clear();
+			//out.clear();
 			if (!instr.size()) return;
 
 			// Fast string splitting based on null values.
@@ -391,7 +391,6 @@ namespace scatdb {
 			const std::string &instr, std::map<std::string, std::string> &out)
 		{
 			using namespace std;
-			out.clear();
 			if (!instr.size()) return;
 
 			// Fast string splitting based on null values.

@@ -88,6 +88,8 @@ SET(scatdb_os
 	private/os_functions_common.hpp
 	src/os_functions_linux.cpp
 	private/os_functions_linux.hpp
+	src/os_functions_freebsd.cpp
+	private/os_functions_freebsd.hpp
 	src/os_functions_win.cpp
 	private/os_functions_win.hpp
 	)
@@ -212,7 +214,8 @@ else()
 		${Boost_PROGRAM_OPTIONS_LIBRARY}
 		${Boost_SYSTEM_LIBRARY})
 endif()
-target_link_libraries(scatdb ${libs})
+# OS_DEP_LIBS is set in addBaseProject.cmake
+target_link_libraries(scatdb ${libs} ${OS_DEP_LIBS})
 addlib(scatdb SHARED)
 storebin(scatdb "Libraries")
 

@@ -23,7 +23,7 @@ namespace scatdb {
 				V_MAX_INTS
 			};
 			enum bools {
-				V_DEBUG, V_OPENMP, V_AMD64, V_X64, V_UNIX, V_APPLE, V_WIN32,
+				V_DEBUG, V_OPENMP, V_AMD64, V_X64, V_UNIX, V_LINUX, V_BSD, V_APPLE, V_WIN32,
 				V_LLVM, V_HAS_BZIP2, V_HAS_GZIP, V_HAS_ZLIB, V_HAS_SZIP,
 				V_MAX_BOOLS
 			};

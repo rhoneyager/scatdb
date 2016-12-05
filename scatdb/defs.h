@@ -115,6 +115,24 @@
 
 #endif
 
+// OS definitions
+#ifdef __unix__
+#ifdef __linux__
+#define SDBR_OS_LINUX
+#endif
+#if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__bsdi__) || defined(__DragonFly__)
+#define SDBR_OS_UNIX
+#endif
+#endif
+#ifdef _WIN32
+#define SDBR_OS_WINDOWS
+#endif
+#if !defined(_WIN32) && !defined(SDBR_OS_UNIX) && !defined(SDBR_OS_LINUX)
+#define SDBR_OS_UNSUPPORTED
+#endif
+
+
+// Common definitions
 enum SDBR_write_type {
 	SDBR_TRUNCATE,
 	SDBR_READWRITE,

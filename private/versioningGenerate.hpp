@@ -85,6 +85,12 @@ namespace scatdb {
 #ifdef __unix__
 			out.vb[versionInfo::V_UNIX] = true;
 #endif
+#ifdef __linux__
+			out.vb[versionInfo::V_LINUX] = true;
+#endif
+#ifdef SDBR_OS_UNIX
+			out.vb[versionInfo::V_BSD] = true;
+#endif
 #ifdef __APPLE__
 			out.vb[versionInfo::V_APPLE] = true;
 #endif
