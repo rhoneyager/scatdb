@@ -467,7 +467,7 @@ namespace scatdb {
 				res->libpath = mdll->path;
 
 				//res->startTime;
-
+				std::string environment, cmdline;
 				int mypid = getPID();
 				if (pid == mypid || IsAppRunningAsAdminMode())
 				{
@@ -493,11 +493,11 @@ namespace scatdb {
 					res->environ = std::string(nstring, nstring+newsize);
 					*/
 					//#else
-					std::string environment = std::string(penv, pend);
+					environment = std::string(penv, pend);
 					//#endif
 					FreeEnvironmentStrings(penv);
 
-					std::string cmdline = std::string(GetCommandLine());
+					cmdline = std::string(GetCommandLine());
 					
 					int nArgs;
 					LPWSTR *szArglist;
