@@ -360,28 +360,28 @@ int main(int argc, char** argv) {
 						* brow(0, COL_B_CONC_M_4) // m^-4
 						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
 						* brow(0, COL_B_FALLVEL_HW_UPPER) // m/s
-						* 3600.f;
+						* 3600.f * 1000.f; // want mm/h
 					brow(0, COL_B_PARTIAL_S_HW_SFC_MM_H) =
 						brow(0, COL_B_MASS_KG) * 1000.f
 						/ rho_wat_g_m3
 						* brow(0, COL_B_CONC_M_4) // m^-4
 						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
 						* brow(0, COL_B_FALLVEL_HW_SFC) // m/s
-						* 3600.f;
+						* 3600.f * 1000.f; // want mm/h
 					brow(0, COL_B_PARTIAL_S_LH_UNRIMED_MM_H) =
 						brow(0, COL_B_MASS_KG) * 1000.f
 						/ rho_wat_g_m3
 						* brow(0, COL_B_CONC_M_4) // m^-4
 						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
 						* brow(0, COL_B_FALLVEL_LH_UNRIMED) // m/s
-						* 3600.f;
+						* 3600.f * 1000.f; // want mm/h
 					brow(0, COL_B_PARTIAL_S_LH_RIMED_MM_H) =
 						brow(0, COL_B_MASS_KG) * 1000.f
 						/ rho_wat_g_m3
 						* brow(0, COL_B_CONC_M_4) // m^-4
 						* brow(0, COL_B_BIN_WIDTH_MM) / 1000.f // m
 						* brow(0, COL_B_FALLVEL_LH_RIMED) // m/s
-						* 3600.f;
+						* 3600.f * 1000.f; // want mm/h
 
 				}
 			}
