@@ -21,7 +21,7 @@ include(addapp)
 include(addlib)
 set(MAJOR 2)
 set(MINOR 0)
-set(REVISION 1)
+set(REVISION 2)
 set(SCATDB_VERSION
 	${MAJOR}.${MINOR}.${REVISION} )
 addBaseProject()
