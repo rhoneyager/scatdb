@@ -37,6 +37,8 @@ namespace scatdb {
 			HIDDEN_SDBR processInfo_p getInfo(int pid);
 			HIDDEN_SDBR moduleInfo_p getModuleInfo(void* func);
 			HIDDEN_SDBR void enumModules(int pid, std::ostream &out = std::cerr);
+
+			HIDDEN_SDBR void writeDebugStr(const std::string & instr);
 		}
 	}
 }

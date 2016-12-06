@@ -15,15 +15,23 @@ macro(getMSVCappend)
 endmacro(getMSVCappend)
 macro(addBaseProject)
 
-# Enable C++11
-# g++
-IF(DEFINED CMAKE_COMPILER_IS_GNUCXX)
-    SET (CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-std=c++11 -fPIC")
-ENDIF()
-IF(DEFINED MSVC)
-    # MSVC parallel builds by default
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-ENDIF()
+# Compiler detection and rules
+if (${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+  # using Clang
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
+  # using GCC
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fPIC")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "Intel")
+	# using Intel C++
+	SET (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c11")
+elseif (${CMAKE_CXX_COMPILER_ID} MATCHES "MSVC")
+	# using Visual Studio C++
+	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+endif()
 
 # If doing a debug build, set the appropriate compiler defines
 IF("${CMAKE_BUILD_TYPE}" MATCHES "Debug")
@@ -53,6 +61,19 @@ ENDIF()
         set(CONF "\"${CMAKE_BUILD_TYPE}${configappend}\"")
     endif()
     #message("${configappend}")
+
+set (OS_DEP_LIBS )
+
+if(NOT WIN32)
+	EXEC_PROGRAM(uname OUTPUT_VARIABLE SYSTEM_NAME)
+
+	SET(SYSTEM_NAME "${SYSTEM_NAME}" CACHE INTERNAL "")
+	IF(SYSTEM_NAME STREQUAL "Linux")
+	ENDIF(SYSTEM_NAME STREQUAL "Linux")
+	IF(SYSTEM_NAME STREQUAL "FreeBSD")
+		set (OS_DEP_LIBS ${OS_DEP_LIBS} procstat)
+	ENDIF(SYSTEM_NAME STREQUAL "FreeBSD")
+endif()
 
 endmacro(addBaseProject)
 

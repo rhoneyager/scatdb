@@ -16,8 +16,8 @@ namespace scatdb {
 			DEBUG_2,
 			DEBUG_1,
 			INFO,
-			NOTIFICATION,
 			NORMAL,
+			NOTIFICATION,
 			WARNING,
 			ERROR,
 			CRITICAL
@@ -27,6 +27,7 @@ namespace scatdb {
 			bool debugChannel;
 			::std::string logFile;
 			int consoleLogThreshold;
+			int debuggerLogThreshold;
 		};
 		DLEXPORT_SDBR void emit_log(
 			const std::string &channel,
@@ -39,6 +40,6 @@ namespace scatdb {
 	}
 }
 
-#define ryan_log(c,p,x) { ::std::ostringstream l; l << x; \
+#define SDBR_log(c,p,x) { ::std::ostringstream l; l << x; \
 	::std::string s = l.str(); \
 	::scatdb::logging::emit_log(c, s, p); }

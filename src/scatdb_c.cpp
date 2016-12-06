@@ -9,6 +9,7 @@
 #include <vector>
 #include <boost/program_options.hpp>
 #include "../scatdb/debug.hpp"
+#include "../private/info.hpp"
 #include "../scatdb/scatdb.h"
 #include "../scatdb/scatdb.hpp"
 
@@ -99,13 +100,13 @@ extern "C" {
 		return true;
 	}
 
-	/*
-	bool SDBR_writeDBHDF5(SDBR_HANDLE handle, const char* outfile) {
+	bool SDBR_writeDBHDF(SDBR_HANDLE handle, const char* outfile,
+		SDBR_write_type wt, const char* hdfpath) {
 		using namespace scatdb;
 		try {
 			const scatdb_base* hp = ( const scatdb_base* )(handle);
 			const db* h = dynamic_cast<const db*>(hp);
-			(h)->writeHDFfile(outfile);
+			(h)->writeHDFfile(outfile, wt, hdfpath);
 			lastErr="";
 		} catch (std::bad_cast &) {
 			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
@@ -116,7 +117,6 @@ extern "C" {
 		}
 		return true;
 	}
-	*/
 
 	uint64_t SDBR_getNumRows(SDBR_HANDLE handle) {
 		using namespace scatdb;
@@ -135,8 +135,6 @@ extern "C" {
 		}
 		return true;
 	}
-
-
 
 	bool SDBR_start(int argc, char** argv) {
 		try {
@@ -161,6 +159,328 @@ extern "C" {
 		}
 		return true;
 	}
+	bool SDBR_start_alt()
+	{
+		try {
+			namespace po = boost::program_options;
+			po::options_description desc("Allowed options"), cmdline("Command-line options"),
+				config("Config options"), hidden("Hidden options"), oall("all options");
+
+			scatdb::debug::add_options(cmdline, config, hidden);
+
+			desc.add(cmdline).add(config);
+			oall.add(cmdline).add(config).add(hidden);
+
+			po::variables_map vm;
+			auto pbase = scatdb::debug::getCurrentAppInfo();
+			po::store(po::command_line_parser(pbase->pInfo->argv_v).allow_unregistered().
+				options(oall).run(), vm);
+			po::notify(vm);
+
+			scatdb::debug::process_static_options(vm);
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return true;
+	}
+
+	bool DLEXPORT_SDBR SDBR_getFloatTableSize(
+		SDBR_HANDLE handle, uint64_t *numFloats, uint64_t *numBytes)
+	{
+		using namespace scatdb;
+		uint64_t res = 0;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			uint64_t rows = (uint64_t)(h)->floatMat.rows();
+			uint64_t cols = (uint64_t)(h)->floatMat.cols();
+			*numFloats = rows * cols;
+			*numBytes = *numFloats * sizeof(float);
+			lastErr = "";
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return false;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return true;
+	}
+
+	bool DLEXPORT_SDBR SDBR_getIntTableSize(
+		SDBR_HANDLE handle, uint64_t *numInts, uint64_t *numBytes)
+	{
+		using namespace scatdb;
+		uint64_t res = 0;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			uint64_t rows = (uint64_t)(h)->intMat.rows();
+			uint64_t cols = (uint64_t)(h)->intMat.cols();
+			*numInts = rows * cols;
+			*numBytes = *numInts * sizeof(uint64_t);
+			lastErr = "";
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return false;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return true;
+	}
+
+	bool DLEXPORT_SDBR SDBR_getStatsTableSize(
+		uint64_t *numFloats, uint64_t *numBytes)
+	{
+		using namespace scatdb;
+		uint64_t res = 0;
+		try {
+			
+			uint64_t rows = (uint64_t)scatdb::db::data_entries::SDBR_NUM_DATA_ENTRIES_STATS;
+			uint64_t cols = (uint64_t)scatdb::db::data_entries::SDBR_NUM_DATA_ENTRIES_FLOATS;
+			*numFloats = rows * cols;
+			*numBytes = *numFloats * sizeof(float);
+			lastErr = "";
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return true;
+	}
+
+	bool DLEXPORT_SDBR SDBR_getFloatTable(SDBR_HANDLE handle, float* p, uint64_t maxsize)
+	{
+		using namespace scatdb;
+		bool res = false;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			uint64_t rows = (uint64_t)(h)->floatMat.rows();
+			uint64_t cols = (uint64_t)(h)->floatMat.cols();
+			uint64_t numFloats = rows * cols;
+			uint64_t numBytes = numFloats * sizeof(float);
+			memcpy(p, h->floatMat.data(), (maxsize < numBytes) ? maxsize : numBytes);
+			if (maxsize < numBytes) {
+				lastErr = "Destination array is too small.";
+			} else {
+				lastErr = "";
+				res = true;
+			}
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return false;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return res;
+	}
+
+	bool DLEXPORT_SDBR SDBR_getIntTable(SDBR_HANDLE handle, uint64_t* p, uint64_t maxsize)
+	{
+		using namespace scatdb;
+		bool res = false;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			uint64_t rows = (uint64_t)(h)->intMat.rows();
+			uint64_t cols = (uint64_t)(h)->intMat.cols();
+			uint64_t numInts = rows * cols;
+			uint64_t numBytes = numInts * sizeof(float);
+			memcpy(p, h->intMat.data(), (maxsize < numBytes) ? maxsize : numBytes);
+			if (maxsize < numBytes) {
+				lastErr = "Destination array is too small.";
+			}
+			else {
+				lastErr = "";
+				res = true;
+			}
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return false;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return res;
+	}
+
+	bool DLEXPORT_SDBR SDBR_getStats(SDBR_HANDLE handle, float *p, uint64_t maxsize, uint64_t *count)
+	{
+		using namespace scatdb;
+		bool res = false;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			auto stats = h->getStats();
+			*count = stats->count;
+
+			uint64_t rows = (uint64_t)(stats)->floatStats.rows();
+			uint64_t cols = (uint64_t)(stats)->floatStats.cols();
+			uint64_t numFloats = rows * cols;
+			uint64_t numBytes = numFloats * sizeof(float);
+			memcpy(p, (stats)->floatStats.data(), (maxsize < numBytes) ? maxsize : numBytes);
+			if (maxsize < numBytes) {
+				lastErr = "Destination array is too small.";
+			}
+			else {
+				lastErr = "";
+				res = true;
+			}
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return false;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return false;
+		}
+		return res;
+	}
+
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterFloatByString(
+		SDBR_HANDLE handle, data_entries_floats col_id, const char* strFilter)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+			
+			auto f = filter::generate();
+			std::string sstrfilter(strFilter);
+			//f->addFilterInt(db::data_entries::SDBR_FLAKETYPE, vm["flaketypes"].as<string>());
+			f->addFilterFloat((db::data_entries::data_entries_floats) col_id, sstrfilter);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+	
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterFloatByRange(
+		SDBR_HANDLE handle, data_entries_floats col_id, float minVal, float maxVal)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+
+			auto f = filter::generate();
+			//f->addFilterInt(db::data_entries::SDBR_FLAKETYPE, vm["flaketypes"].as<string>());
+			f->addFilterFloat((db::data_entries::data_entries_floats) col_id, minVal, maxVal);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterIntByString(
+		SDBR_HANDLE handle, data_entries_ints col_id, const char* strFilter)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+
+			auto f = filter::generate();
+			std::string sstrfilter(strFilter);
+			f->addFilterInt((db::data_entries::data_entries_ints) col_id, sstrfilter);
+			//f->addFilterFloat((db::data_entries::data_entries_floats) col_id, sstrfilter);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+
+	SDBR_HANDLE DLEXPORT_SDBR SDBR_filterIntByRange(
+		SDBR_HANDLE handle, data_entries_ints col_id, uint64_t minVal, uint64_t maxVal)
+	{
+		using namespace scatdb;
+		try {
+			const scatdb_base* hp = (const scatdb_base*)(handle);
+			const db* h = dynamic_cast<const db*>(hp);
+
+			auto f = filter::generate();
+			f->addFilterInt((db::data_entries::data_entries_ints) col_id, minVal, maxVal);
+			//f->addFilterFloat((db::data_entries::data_entries_floats) col_id, minVal, maxVal);
+			auto sdb_filtered = f->apply(h);
+
+			ptrs[sdb_filtered.get()] = sdb_filtered;
+			lastErr = "";
+			return (SDBR_HANDLE)(sdb_filtered.get());
+		}
+		catch (std::bad_cast &) {
+			lastErr = "Passed handle in SDBR_writeDB is not a database handle.";
+			return nullptr;
+		}
+		catch (std::exception &e) {
+			lastErr = std::string(e.what());
+			return nullptr;
+		}
+		return nullptr;
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyStatsColumn(uint64_t val) {
+		return scatdb::db::data_entries::stringifyStats(val);
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyFlakeId(uint64_t val) {
+		return scatdb::db::data_entries::getCategoryDescription(val);
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyFloatsColumn(uint64_t val) {
+		return scatdb::db::data_entries::stringify<float>(val);
+	}
+
+	DLEXPORT_SDBR const char* SDBR_stringifyIntsColumn(uint64_t val) {
+		return scatdb::db::data_entries::stringify<int>(val);
+	}
+
 }
 
 

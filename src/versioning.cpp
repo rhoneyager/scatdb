@@ -1,6 +1,6 @@
-#include "../private/versioning.hpp"
+#include "../private/versioningGenerate.hpp"
 #include "../scatdb/error.hpp"
-#include "../private/hash.hpp"
+#include "../scatdb/hash.hpp"
 #include <cstring>
 namespace scatdb {
 	namespace versioning {
@@ -22,6 +22,8 @@ namespace scatdb {
 			tryBool(V_AMD64);
 			tryBool(V_X64);
 			tryBool(V_UNIX);
+			tryBool(V_LINUX);
+			tryBool(V_BSD);
 			tryBool(V_APPLE);
 			tryBool(V_WIN32);
 			tryStr(vboost);
@@ -73,22 +75,24 @@ namespace scatdb {
 			return internal::ver_int;
 		}
 
-		void getHashOfVersionInfo(const versionInfo &in, hash::HASH_t &out) {
-			hash::HASH_t hBools = hash::HASH(in.vb, sizeof(in.vb));
-			hash::HASH_t hNums = hash::HASH(in.vn, sizeof(in.vn));
+		hash::HASH_p getHashOfVersionInfo(const versionInfo &in) {
+			std::shared_ptr< hash::HASH_t> res(new hash::HASH_t);
+			hash::HASH_p hBools = hash::HASH(in.vb, sizeof(in.vb));
+			hash::HASH_p hNums = hash::HASH(in.vn, sizeof(in.vn));
 
-			hash::HASH_t hvdate = hash::HASH(in.vdate, (int) sizeof(char) * (int)strnlen_s(in.vdate, versionInfo::charmax));
-			hash::HASH_t hvtime = hash::HASH(in.vtime, (int) sizeof(char) * (int)strnlen_s(in.vtime, versionInfo::charmax));
-			hash::HASH_t hvsdate = hash::HASH(in.vsdate, (int) sizeof(char) * (int)strnlen_s(in.vsdate, versionInfo::charmax));
-			hash::HASH_t hvssource = hash::HASH(in.vssource, (int) sizeof(char) * (int)strnlen_s(in.vssource, versionInfo::charmax));
-			hash::HASH_t hvsuuid = hash::HASH(in.vsuuid, (int) sizeof(char) * (int)strnlen_s(in.vsuuid, versionInfo::charmax));
-			hash::HASH_t hvboost = hash::HASH(in.vboost, (int) sizeof(char) * (int)strnlen_s(in.vboost, versionInfo::charmax));
-			hash::HASH_t hvassembly = hash::HASH(in.vassembly, (int) sizeof(char) * (int)strnlen_s(in.vassembly, versionInfo::charmax));
-			hash::HASH_t hvgithash = hash::HASH(in.vgithash, (int) sizeof(char) * (int)strnlen_s(in.vgithash, versionInfo::charmax));
-			hash::HASH_t hvgitbranch = hash::HASH(in.vgitbranch, (int) sizeof(char) * (int)strnlen_s(in.vgitbranch, versionInfo::charmax));
+			hash::HASH_p hvdate = hash::HASH(in.vdate, (int) sizeof(char) * (int)strnlen_s(in.vdate, versionInfo::charmax));
+			hash::HASH_p hvtime = hash::HASH(in.vtime, (int) sizeof(char) * (int)strnlen_s(in.vtime, versionInfo::charmax));
+			hash::HASH_p hvsdate = hash::HASH(in.vsdate, (int) sizeof(char) * (int)strnlen_s(in.vsdate, versionInfo::charmax));
+			hash::HASH_p hvssource = hash::HASH(in.vssource, (int) sizeof(char) * (int)strnlen_s(in.vssource, versionInfo::charmax));
+			hash::HASH_p hvsuuid = hash::HASH(in.vsuuid, (int) sizeof(char) * (int)strnlen_s(in.vsuuid, versionInfo::charmax));
+			hash::HASH_p hvboost = hash::HASH(in.vboost, (int) sizeof(char) * (int)strnlen_s(in.vboost, versionInfo::charmax));
+			hash::HASH_p hvassembly = hash::HASH(in.vassembly, (int) sizeof(char) * (int)strnlen_s(in.vassembly, versionInfo::charmax));
+			hash::HASH_p hvgithash = hash::HASH(in.vgithash, (int) sizeof(char) * (int)strnlen_s(in.vgithash, versionInfo::charmax));
+			hash::HASH_p hvgitbranch = hash::HASH(in.vgitbranch, (int) sizeof(char) * (int)strnlen_s(in.vgitbranch, versionInfo::charmax));
 
-			out = hBools ^ hNums ^ hvdate ^ hvtime ^ hvsdate ^ hvssource
-				^ hvsuuid ^ hvboost ^ hvassembly ^ hvgithash ^ hvgitbranch;
+			*res = *(hBools.get()) ^ *(hNums.get()) ^ *(hvdate.get()) ^ *(hvtime.get()) ^ *(hvsdate.get()) ^ *(hvssource.get())
+				^ *(hvsuuid.get()) ^ *(hvboost.get()) ^ *(hvassembly.get()) ^ *(hvgithash.get()) ^ *(hvgitbranch.get());
+			return res;
 		}
 
 		const std::string versionInfo::stringifyBool(int bools) {
@@ -97,6 +101,8 @@ namespace scatdb {
 			if (bools == V_AMD64) return std::string("V_AMD64");
 			if (bools == V_X64) return std::string("V_X64");
 			if (bools == V_UNIX) return std::string("V_UNIX");
+			if (bools == V_LINUX) return std::string("V_LINUX");
+			if (bools == V_BSD) return std::string("V_BSD");
 			if (bools == V_APPLE) return std::string("V_APPLE");
 			if (bools == V_WIN32) return std::string("V_WIN32");
 			if (bools == V_LLVM) return std::string("V_LLVM");
@@ -133,5 +139,59 @@ namespace scatdb {
 				.add<std::string>("Reason", "Input out of range.");
 			return std::string("");
 		}
+
+		void debug_preamble(const versionInfo &v, std::ostream &out)
+		{
+			out << "Compiled on " << v.vdate << " at " << v.vtime << std::endl;
+			out << "Version " << v.vn[versionInfo::V_MAJOR] << "." << v.vn[versionInfo::V_MINOR]
+				<< "." << v.vn[versionInfo::V_REVISION] << std::endl;
+			if (v.vgitbranch[0] != '\0') out << "GIT Branch " << v.vgitbranch << std::endl;
+			if (v.vgithash[0] != '\0') out << "GIT Hash " << v.vgithash << std::endl;
+			if (v.vn[versionInfo::V_SVNREVISION]) out << "SVN Revision " << v.vn[versionInfo::V_SVNREVISION] << std::endl;
+			if (v.vsdate[0] != '\0') out << "SVN Revision Date: " << v.vsdate << std::endl;
+			if (v.vssource[0] != '\0') out << "SVN Source: " << v.vssource << std::endl;
+			if (v.vsuuid[0] != '\0') out << "SVN UUID: " << v.vsuuid << std::endl;
+			if (v.vb[versionInfo::V_DEBUG]) out << "Debug Version" << std::endl;
+			else out << "Release Version" << std::endl;
+			if (v.vb[versionInfo::V_OPENMP]) out << "OpenMP enabled in Compiler" << std::endl;
+			else out << "OpenMP disabled in Compiler" << std::endl;
+			if (v.vb[versionInfo::V_AMD64] || v.vb[versionInfo::V_X64]) out << "64-bit build" << std::endl;
+			if (v.vb[versionInfo::V_UNIX]) out << "Unix / Linux Compile" << std::endl;
+			if (v.vb[versionInfo::V_BSD]) out << "Unix Compile" << std::endl;
+			if (v.vb[versionInfo::V_LINUX]) out << "Linux Compile" << std::endl;
+			if (v.vb[versionInfo::V_APPLE]) out << "Mac Os X Compile" << std::endl;
+			if (v.vb[versionInfo::V_WIN32]) out << "Windows Compile" << std::endl;
+
+			if (v.vn[versionInfo::V_GNUC_MAJ])
+				out << "GNU Compiler Suite " << v.vn[versionInfo::V_GNUC_MAJ] << "."
+				<< v.vn[versionInfo::V_GNUC_MIN] << "." << v.vn[versionInfo::V_GNUC_PATCH] << std::endl;
+			if (v.vn[versionInfo::V_MINGW_MAJ])
+				out << "MinGW Compiler Suite " << v.vn[versionInfo::V_MINGW_MAJ] << "."
+				<< v.vn[versionInfo::V_MINGW_MIN] << std::endl;
+			if (v.vn[versionInfo::V_SUNPRO])
+				out << "Sun Studio Compiler Suite " << v.vn[versionInfo::V_SUNPRO] << std::endl;
+			if (v.vn[versionInfo::V_PATHCC_MAJ])
+				out << "EKOPath Compiler " << v.vn[versionInfo::V_PATHCC_MAJ] << "."
+				<< v.vn[versionInfo::V_PATHCC_MIN] << "." << v.vn[versionInfo::V_PATHCC_PATCH] << std::endl;
+			if (v.vb[versionInfo::V_LLVM]) out << "LLVM Compiler Suite" << std::endl;
+			if (v.vn[versionInfo::V_CLANG_MAJ])
+				out << "clang compiler " << v.vn[versionInfo::V_CLANG_MAJ] << "."
+				<< v.vn[versionInfo::V_CLANG_MIN] << "." << v.vn[versionInfo::V_CLANG_PATCH] << std::endl;
+			if (v.vn[versionInfo::V_INTEL])
+				out << "Intel Suite " << v.vn[versionInfo::V_INTEL]
+				<< " Date " << v.vn[versionInfo::V_INTEL_DATE] << std::endl;
+			if (v.vn[versionInfo::V_MSCVER])
+				out << "Microsoft Visual Studio Compiler Version " << v.vn[versionInfo::V_MSCVER] << std::endl;
+			out << "Boost version " << v.vboost << std::endl;
+
+			if (v.vb[versionInfo::V_HAS_BZIP2]) out << "Linked with bzip2." << std::endl;
+			if (v.vb[versionInfo::V_HAS_GZIP]) out << "Linked with gzip." << std::endl;
+			if (v.vb[versionInfo::V_HAS_ZLIB]) out << "Linked with zlib." << std::endl;
+			if (v.vb[versionInfo::V_HAS_SZIP]) out << "Linked with szip." << std::endl;
+
+			out << std::endl;
+			out << std::endl;
+		}
+
 	}
 }

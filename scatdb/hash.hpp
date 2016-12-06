@@ -30,7 +30,7 @@ namespace scatdb {
 			{
 				return !operator==(rhs);
 			}
-			inline UINT128 operator^(const UINT128 &rhs)
+			inline UINT128 operator^(const UINT128 &rhs) const
 			{
 				UINT128 res = *this;
 				res.lower = res.lower ^ rhs.lower;

@@ -121,7 +121,8 @@ namespace scatdb {
 						auto its = res->intMat.block<1, data_entries::SDBR_NUM_DATA_ENTRIES_INTS>(i, 0);
 						bool invalid = false;
 						its(data_entries::SDBR_FLAKETYPE) = o_shs.get()[ishape];
-						if (its(data_entries::SDBR_FLAKETYPE) < 0) invalid = true;
+						// its(...) is an unsigned int. Check cannot succeed.
+						if (its(data_entries::SDBR_FLAKETYPE) > 1000) invalid = true;
 						fts(data_entries::SDBR_FREQUENCY_GHZ) = o_fs.get()[ifreq];
 						if (fts(data_entries::SDBR_FREQUENCY_GHZ) <= 0) invalid = true;
 						fts(data_entries::SDBR_TEMPERATURE_K) = o_ts.get()[itemp];

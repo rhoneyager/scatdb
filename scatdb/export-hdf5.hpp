@@ -1,6 +1,7 @@
 #pragma once
 #pragma warning( disable : 4251 ) // warning C4251: dll-interface
 
+#include "defs.hpp"
 #include <memory>
 #include <string>
 #include <vector>
@@ -17,15 +18,15 @@ namespace scatdb {
 		namespace hdf5
 		{
 			/// Master switch for zlib compression
-			void useZLIB(bool);
-			bool useZLIB();
+			DLEXPORT_SDBR void useZLIB(bool);
+			DLEXPORT_SDBR bool useZLIB();
 
 			/// Provides a method for calculating the offsets from std::arrays of data
 #define ARRAYOFFSET(TYPE, INDEX) [](){TYPE a; return (size_t) &a[INDEX] - (size_t) &a; }()
 
-			std::shared_ptr<H5::Group> openOrCreateGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
-			std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
-			bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openOrCreateGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name);
 
 			/// \param std::shared_ptr<H5::AtomType> is a pointer to a newly-constructed matching type
 			/// \returns A pair of (the matching type, a flag indicating passing by pointer or reference)
@@ -35,8 +36,8 @@ namespace scatdb {
 
 			/// Check to see if output type is for a string
 			template <class DataType> bool isStrType() { return false; }
-			template<> bool isStrType<std::string>();
-			template<> bool isStrType<const char*>();
+			template<> DLEXPORT_SDBR bool isStrType<std::string>();
+			template<> DLEXPORT_SDBR bool isStrType<const char*>();
 
 			/// Handles proper insertion of strings versus other data types
 			template <class DataType>
@@ -44,7 +45,7 @@ namespace scatdb {
 			{
 				attr.write(*vls_type, &value);
 			}
-			template <> void insertAttr<std::string>(H5::Attribute &attr, std::shared_ptr<H5::AtomType> vls_type, const std::string& value);
+			template <> DLEXPORT_SDBR void insertAttr<std::string>(H5::Attribute &attr, std::shared_ptr<H5::AtomType> vls_type, const std::string& value);
 
 			/// Convenient template to add an attribute of a variable type to a group or dataset
 			template <class DataType, class Container>
@@ -117,7 +118,7 @@ namespace scatdb {
 			{
 				attr.read(*vls_type, &value);
 			}
-			template <> void loadAttr<std::string>(H5::Attribute &attr, std::shared_ptr<H5::AtomType> vls_type, std::string& value);
+			template <> DLEXPORT_SDBR void loadAttr<std::string>(H5::Attribute &attr, std::shared_ptr<H5::AtomType> vls_type, std::string& value);
 
 
 			/// Convenient template to read an attribute of a variable
@@ -214,27 +215,27 @@ namespace scatdb {
 			}
 
 
-			bool attrExists(std::shared_ptr<H5::H5Object> obj, const char* attname);
+			DLEXPORT_SDBR bool attrExists(std::shared_ptr<H5::H5Object> obj, const char* attname);
 
 			/// Convenience function to either open or create a group
-			std::shared_ptr<H5::Group> openOrCreateGroup(
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openOrCreateGroup(
 				std::shared_ptr<H5::CommonFG> base, const char* name);
 
 			/// Convenience function to check if a given group exists
-			bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name);
 
 			/// Convenience function to check if a symbolic link exists, and if the object being 
 			/// pointed to also exists.
 			/// \returns std::pair<bool,bool> refers to, respectively, if a symbolic link is found and 
 			/// if the symbolic link is good.
-			std::pair<bool, bool> symLinkExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::pair<bool, bool> symLinkExists(std::shared_ptr<H5::CommonFG> base, const char* name);
 
 			/// \brief Convenience function to open a group, if it exists
 			/// \returns nullptr is the group does not exist.
-			std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
 
 			/// Convenience function to check if a given dataset exists
-			bool datasetExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR bool datasetExists(std::shared_ptr<H5::CommonFG> base, const char* name);
 
 			/// Convenience function to write an Eigen object, in the correct format
 			template <class DataType, class Container>
@@ -523,7 +524,7 @@ namespace scatdb {
 
 
 			/// Creates a property list with the compression + chunking as specified
-			std::shared_ptr<H5::DSetCreatPropList> make_plist(size_t rows, size_t cols, bool compress = true);
+			DLEXPORT_SDBR std::shared_ptr<H5::DSetCreatPropList> make_plist(size_t rows, size_t cols, bool compress = true);
 		}
 	}
 }

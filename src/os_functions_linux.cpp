@@ -1,4 +1,4 @@
-#ifdef __unix__
+#ifdef __linux__
 #include <boost/shared_array.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
@@ -100,38 +100,19 @@ namespace scatdb{
 				std::lock_guard<std::mutex> lock(m_sys_names);
 				if (username.size()) return username;
 
-				const size_t len = 256;
-				char hname[len];
-				int res = 0;
-				res = getlogin_r(hname, len);
-				if (res) {
-					char errbuf[len];
-					// strerror_r has awkward conventions.
-					char* errbufres = strerror_r(res, errbuf, len);
-					static const std::string serr("ERROR in getUsername");
-					ryan_log("os_functions", scatdb::logging::NOTIFICATION,
-						"getUsername failed when directly trying to "
-						"determine the username using getlogin_r. "
-						"The error code was " << res
-						<< ", which means: " << errbufres  << ". Will try "
-						"to use the LOGNAME environment variable.");
-					// Try again by reading the LOGNAME environment variable.
-					auto hInfo = scatdb::debug::getProcessInfo(getPID());
+				auto hInfo = scatdb::debug::getProcessInfo(getPID());
 
-					if (hInfo->expandedEnviron.count("LOGNAME")) {
-						username = hInfo->expandedEnviron.at("LOGNAME");
-						ryan_log("os_functions", scatdb::logging::NOTIFICATION,
-							"getUsername succeeded by reading LOGNAME.");
-					} else { 
-						username = serr;
-						ryan_log("os_functions", scatdb::logging::ERROR,
-							"getUsername failed to determine the username."
-							);
-
-					}
-				} else {
-					username = std::string(hname);
+				if (hInfo->expandedEnviron.count("LOGNAME")) {
+					username = hInfo->expandedEnviron.at("LOGNAME");
+					SDBR_log("os_functions", scatdb::logging::NOTIFICATION,
+						"getUsername succeeded by reading LOGNAME.");
+				} else { 
+					username = "UNKNOWN";
+					SDBR_log("os_functions", scatdb::logging::ERROR,
+						"getUsername failed to determine the username."
+						);
 				}
+
 
 				return username;
 			}
@@ -145,7 +126,7 @@ namespace scatdb{
 				char hname[len];
 				int res = 0;
 				res = gethostname(hname, len);
-				if (hname)
+				if (hname[0] != '\0')
 					hostname = std::string(hname);
 
 				return hostname;
@@ -208,6 +189,8 @@ namespace scatdb{
 					.add<int>("pid", pid)
 					.add<std::string>("Description", "PID does not exist.");
 				res->ppid = getPPID(pid);
+				std::string cmdline;
+				std::string environment;
 				{
 					using namespace boost::filesystem;
 					using namespace std;
@@ -238,7 +221,8 @@ namespace scatdb{
 					while (scmdline.good())
 					{
 						scmdline.read(buffer, length);
-						res->cmdline.append(buffer, scmdline.gcount());
+						cmdline.append(buffer, scmdline.gcount());
+						res->argv_v.push_back(std::string(buffer));
 					}
 					//scmdline >> res->cmdline;
 					// Replace command-line null symbols with spaces
@@ -251,7 +235,7 @@ namespace scatdb{
 					while (senviron.good())
 					{
 						senviron.read(buffer, length);
-						res->environment.append(buffer, senviron.gcount());
+						environment.append(buffer, senviron.gcount());
 					}
 					// Replace environment null symbols with newlines
 					//std::replace(res->environment.begin(),res->environment.end(),
@@ -259,13 +243,16 @@ namespace scatdb{
 					delete[] buffer;
 
 					// start time is the timestamp of the /proc/pid folder.
-					std::time_t st = last_write_time(pp);
-					string ct(ctime(&st));
-					res->startTime = ct;
+					//std::time_t st = last_write_time(pp);
+					//string ct(ctime(&st));
+					//res->startTime = ct;
 
 				}
-				scatdb::splitSet::splitNullMap(res->environment, res->expandedEnviron);
-				scatdb::splitSet::splitNullVector(res->cmdline, res->expandedCmd);
+				moduleInfo_p mdll = getModuleInfo((void*)(getInfo));
+				res->libpath = mdll->path;
+
+				scatdb::splitSet::splitNullMap(environment, res->expandedEnviron);
+				scatdb::splitSet::splitNullVector(cmdline, res->expandedCmd);
 				return res;
 			}
 

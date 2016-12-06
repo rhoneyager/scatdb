@@ -15,11 +15,7 @@ namespace scatdb {
 	class DLEXPORT_SDBR scatdb_base { public: scatdb_base(); virtual ~scatdb_base(); };
 	class filter;
 	class filterImpl;
-	enum class write_type {
-		SDBR_TRUNCATE,
-		SDBR_READWRITE,
-		SDBR_CREATE
-	};
+	
 	class DLEXPORT_SDBR db : public scatdb_base {
 		friend class filter;
 		friend class filterImpl;
@@ -34,7 +30,7 @@ namespace scatdb {
 		void print(std::ostream &out) const;
 		void writeTextFile(const char* filename) const;
 		void writeHDFfile(const char* filename,
-			write_type, const char* hdfinternalpath = nullptr) const;
+			SDBR_write_type, const char* hdfinternalpath = nullptr) const;
 		void writeHDFfile(std::shared_ptr<H5::Group>) const;
 
 		// The data in the database, in tabular form
@@ -86,6 +82,7 @@ namespace scatdb {
 	private:
 		mutable std::shared_ptr<const data_stats> pStats;
 	};
+	typedef std::shared_ptr<const db> db_t;
 	class DLEXPORT_SDBR filter : public scatdb_base {
 	private:
 		std::shared_ptr<filterImpl> p;
@@ -106,10 +103,11 @@ namespace scatdb {
 		//void addFilterStartingRow(int row);
 
 		enum class sortDir { SDBR_ASCENDING, SDBR_DESCENDING };
-		void addSortFloat(db::data_entries::data_entries_floats param, sortDir);
-		void addSortInt(db::data_entries::data_entries_ints param, sortDir);
+		//void addSortFloat(db::data_entries::data_entries_floats param, sortDir);
+		//void addSortInt(db::data_entries::data_entries_ints param, sortDir);
 
 		std::shared_ptr<const db> apply(std::shared_ptr<const db>) const;
+		std::shared_ptr<const db> apply(const db*) const;
 	};
 }
 

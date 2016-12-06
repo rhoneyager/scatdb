@@ -21,7 +21,7 @@ include(addapp)
 include(addlib)
 set(MAJOR 2)
 set(MINOR 0)
-set(REVISION 0)
+set(REVISION 2)
 set(SCATDB_VERSION
 	${MAJOR}.${MINOR}.${REVISION} )
 addBaseProject()
@@ -83,19 +83,26 @@ set (REL_BIN_DIR bin)
 set (REL_LIB_DIR lib)
 
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
-
-SET(scatdb_main
+SET(scatdb_os
+	src/os_functions_common.cpp
+	private/os_functions_common.hpp
+	src/os_functions_linux.cpp
+	private/os_functions_linux.hpp
+	src/os_functions_freebsd.cpp
+	private/os_functions_freebsd.hpp
+	src/os_functions_win.cpp
+	private/os_functions_win.hpp
+	)
+SET(scatdb_debug
 	src/debug.cpp
 	scatdb/debug.hpp
 	src/error.cpp
 	scatdb/error.hpp
 	src/errorTypes.cpp
 	scatdb/errorTypes.hpp
-	src/export-hdf5.cpp
-	scatdb/export-hdf5.hpp
 	src/hash.cpp
-	private/hash.hpp
-	private/hashForwards.hpp
+	scatdb/hash.hpp
+	scatdb/hashForwards.hpp
 	private/info.hpp
 	private/info_fwd.hpp
 	src/logging.cpp
@@ -105,23 +112,23 @@ SET(scatdb_main
 	src/options.cpp
 	private/options.hpp
 	scatdb/optionsForwards.hpp
-	src/os_functions_common.cpp
-	private/os_functions_common.hpp
-	src/os_functions_linux.cpp
-	private/os_functions_linux.hpp
-	src/os_functions_win.cpp
-	private/os_functions_win.hpp
 	src/splitSet.cpp
 	scatdb/splitSet.hpp
 	src/versioning.cpp
 	private/versioning.hpp
 	private/versioningForwards.hpp
+	private/versioningGenerate.hpp
+	)
+SET(scatdb_main
+	src/export-hdf5.cpp
+	scatdb/export-hdf5.hpp
 	scatdb/defs.h
 	scatdb/defs.hpp
 	scatdb/lowess.hpp
 	scatdb/scatdb.h
 	scatdb/scatdb.hpp
 	scatdb/scatdb_liu.h
+	scatdb/zeros.hpp
 	src/scatdb.cpp
 	src/scatdb_c.cpp
 	src/scatdb_stats.cpp
@@ -132,10 +139,64 @@ SET(scatdb_main
 	src/io_simple.cpp
 	src/scatdb_liu.c
 	src/scatdb_liu_supplemental.cpp
+	src/zeros.cpp
 	)
+set(scatdb_shape
+	src/chainHull.cpp
+	private/chainHull.hpp
+	src/shape.cpp
+	src/shapeAlgsProj.cpp
+	src/shapeIO.cpp
+	src/shapeIOhdfRead.cpp
+	src/shapeIOhdfWrite.cpp
+	#src/shapeIOtext.cpp
+	src/shapeIOtextParsers.cpp
+	scatdb/shape/shape.hpp
+	scatdb/shape/shapeIO.hpp
+	scatdb/shape/shapeAlgs.hpp
+	scatdb/shape/shapeForwards.hpp
+	private/shapeBackend.hpp
+	private/shapeIOtext.hpp
+	)
+set(scatdb_refract
+	scatdb/refract/refract.hpp
+	scatdb/refract/refractBase.hpp
+	src/refract.cpp
+	src/refractImpl.cpp
+	private/linterp.h
+	#src/refractStore.cpp
+	#private/refractBackend.hpp
+	)
+SET(scatdb_units
+	src/units.cpp
+	src/unitsPlugins.cpp
+	src/unitsSimple.cpp
+	scatdb/units/units.hpp
+	scatdb/units/unitsPlugins.hpp
+	private/unitsBackend.hpp
+	)
+set(scatdb_docs
+	LICENSE
+	README.md
+	changelog.md
+	dbformat.md
+	INSTALL.md
+	)
+source_group("Docs" FILES ${scatdb_docs})
+SOURCE_GROUP("OS" FILES ${scatdb_os})
+SOURCE_GROUP("Debug" FILES ${scatdb_debug})
 source_group("Main" FILES ${scatdb_main})
+source_group("Shape" FILES ${scatdb_shape})
+source_group("Refract" FILES ${scatdb_refract})
+source_group("Units" FILES ${scatdb_units})
 set( scatdb_srcs
 	${scatdb_main}
+	${scatdb_debug}
+	${scatdb_os}
+	${scatdb_refract}
+	${scatdb_shape}
+	${scatdb_units}
+	${scatdb_docs}
 	"${CMAKE_CURRENT_BINARY_DIR}/Modules/scatdb"
     "${CMAKE_CURRENT_BINARY_DIR}/cmake-settings.h"
    )
@@ -153,47 +214,10 @@ else()
 		${Boost_PROGRAM_OPTIONS_LIBRARY}
 		${Boost_SYSTEM_LIBRARY})
 endif()
-target_link_libraries(scatdb ${libs})
+# OS_DEP_LIBS is set in addBaseProject.cmake
+target_link_libraries(scatdb ${libs} ${OS_DEP_LIBS})
 addlib(scatdb SHARED)
 storebin(scatdb "Libraries")
-
-option (BUILD_APPS "Build applications" ON)
-IF (BUILD_APPS)
-	option (BUILD_EXAMPLE_CPP "Build C++ app example" ON)
-	option (BUILD_EXAMPLE_C "Build C app example" ON)
-	option (BUILD_ENVELOPES "Build envelopes app" ON)
-
-	if (BUILD_EXAMPLE_CPP)
-add_executable (scatdb_example_cpp
-	apps/cpp/test.cpp
-	)
-target_link_libraries(scatdb_example_cpp ${libs} scatdb)
-addapp(scatdb_example_cpp "Examples/scatdb")
-
-endif()
-
-if (BUILD_EXAMPLE_C)
-add_executable (scatdb_example_c
-	apps/c/test-c.c
-	)
-target_link_libraries(scatdb_example_c ${libs} scatdb)
-addapp(scatdb_example_c "Examples/scatdb")
-ENDIF()
-#add_executable (scatdb_example_fortran
-#	apps/fortran/test-f.f90
-#	)
-#set_target_properties( scatdb_example_fortran PROPERTIES LINKER_LANGUAGE Fortran)
-#target_link_libraries(scatdb_example_fortran ${libs} scatdb)
-#addapp(scatdb_example_fortran "Examples/scatdb")
-
-if (BUILD_ENVELOPES)
-add_executable (scatdb_envelopes apps/envelopes/envelopes.cpp)
-target_link_libraries(scatdb_envelopes ${libs} scatdb)
-addapp(scatdb_envelopes "Examples/scatdb")
-
-ENDIF()
-
-ENDIF(BUILD_APPS)
 
 INSTALL(FILES
 	${CMAKE_CURRENT_SOURCE_DIR}/share/scatdb.csv
@@ -210,3 +234,5 @@ INSTALL(DIRECTORY scatdb
 	COMPONENT Headers
 	)
 
+ADD_SUBDIRECTORY(apps)
+adddocs()

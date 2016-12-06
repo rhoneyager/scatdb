@@ -18,12 +18,20 @@ namespace scatdb {
 			std::string path;
 			/// Current working directory
 			std::string cwd;
+			/// Main lib path
+			std::string libpath;
 			/// Environment variables
-			std::string environment;
+			//std::string environment;
 			/// Command-line
-			std::string cmdline;
+			//std::string cmdline;
+			/// Command line number of arguments
+			//int argc;
+			/// Command line argument buffer
+			//const char **argv;
+			/// Command line argument buffer backend
+			std::vector<std::string> argv_v;
 			/// Process start time
-			std::string startTime;
+			//std::string startTime;
 			/// Process ID
 			int pid;
 			/// Process ID of parent

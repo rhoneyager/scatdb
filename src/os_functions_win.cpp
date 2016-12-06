@@ -38,7 +38,23 @@ namespace scatdb {
 			}
 
 			using namespace ::scatdb::debug::vars;
+			/*
+			std::string convertStr(const LPWSTR instr)
+			{
+				size_t origsize = wcslen(instr) + 1;
 
+				const size_t newsize = origsize * 4;
+				size_t convertedChars = 0;
+
+				boost::shared_array<char> nstring(new char[newsize]);
+				//char nstring[newsize];
+				wcstombs_s(&convertedChars, nstring.get(), origsize, instr, _TRUNCATE);
+				// Destination string was always null-terminated!
+				std::string res(nstring.get());
+
+				return std::move(res);
+			}
+			*/
 			std::string convertStr(const LPTSTR instr)
 			{
 
@@ -102,7 +118,7 @@ namespace scatdb {
 				if (!success)
 				{
 					success = GetLastError();
-					ryan_log("os_functions", ::scatdb::logging::ERROR,
+					SDBR_log("os_functions", ::scatdb::logging::ERROR,
 						"Failure in getPathWIN32: " << success);
 					return false;
 				}
@@ -363,7 +379,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"getUsername failed with error " << err);
 				}
 				return username;
@@ -385,7 +401,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"getHostname failed with error " << err);
 				}
 				return hostname;
@@ -405,7 +421,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"SHGetFolderPathA failed with error " << err);
 				}
 				CoTaskMemFree(static_cast<void*>(hname));
@@ -426,7 +442,7 @@ namespace scatdb {
 				}
 				else {
 					DWORD err = GetLastError();
-					ryan_log("os_functions", scatdb::logging::ERROR,
+					SDBR_log("os_functions", scatdb::logging::ERROR,
 						"SHGetFolderPathA failed with error " << err);
 				}
 				CoTaskMemFree(static_cast<void*>(hname));
@@ -447,8 +463,11 @@ namespace scatdb {
 				getPathWIN32((DWORD)pid, filepath, filename); // int always fits in DWORD
 				res->name = filename.string();
 				res->path = filepath.string();
-				res->startTime;
+				moduleInfo_p mdll = getModuleInfo((void*)(getInfo));
+				res->libpath = mdll->path;
 
+				//res->startTime;
+				std::string environment, cmdline;
 				int mypid = getPID();
 				if (pid == mypid || IsAppRunningAsAdminMode())
 				{
@@ -474,11 +493,22 @@ namespace scatdb {
 					res->environ = std::string(nstring, nstring+newsize);
 					*/
 					//#else
-					res->environment = std::string(penv, pend);
+					environment = std::string(penv, pend);
 					//#endif
 					FreeEnvironmentStrings(penv);
 
-					res->cmdline = std::string(GetCommandLine());
+					cmdline = std::string(GetCommandLine());
+					
+					int nArgs;
+					LPWSTR *szArglist;
+					szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+					if (szArglist) {
+						for (int i = 0; i < nArgs; ++i) {
+							std::string sarg = win::convertStr(szArglist[i]);
+							res->argv_v.push_back(sarg);
+						}
+						LocalFree(szArglist);
+					}
 
 					DWORD sz = GetCurrentDirectory(0, NULL);
 					LPTSTR cd = new TCHAR[sz];
@@ -489,7 +519,7 @@ namespace scatdb {
 				}
 				else {
 					// Privilege escalation required. Need to handle this case.
-					ryan_log("os_functions", ::scatdb::logging::ERROR,
+					SDBR_log("os_functions", ::scatdb::logging::ERROR,
 						"Privilege escalation required to get full process information for another process. UNIMPLEMENTED.");
 				}
 
@@ -514,12 +544,12 @@ namespace scatdb {
 				outCreation << pCreationLocal.wYear << "-" << pCreationLocal.wMonth << "-" << pCreationLocal.wDay << " "
 					<< pCreationLocal.wHour << ":" << pCreationLocal.wMinute << ":" << pCreationLocal.wSecond << "."
 					<< pCreationLocal.wMilliseconds;
-				res->startTime = outCreation.str();
+				//res->startTime = outCreation.str();
 
 				CloseHandle(h);
 
-				scatdb::splitSet::splitNullMap(res->environment, res->expandedEnviron);
-				scatdb::splitSet::splitNullVector(res->cmdline, res->expandedCmd);
+				scatdb::splitSet::splitNullMap(environment, res->expandedEnviron);
+				scatdb::splitSet::splitNullVector(cmdline, res->expandedCmd);
 				return res;
 			}
 
@@ -583,6 +613,9 @@ namespace scatdb {
 				if (h && h != INVALID_HANDLE_VALUE) CloseHandle(h);
 			}
 
+			void writeDebugStr(const std::string & instr) {
+				OutputDebugString(instr.c_str());
+			}
 		}
 
 	}

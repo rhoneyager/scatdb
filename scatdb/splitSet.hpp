@@ -19,7 +19,7 @@ namespace scatdb {
 
 		/// Specialization for splitting strings. These 
 		/// objects have no ranges to be compared against.
-		template <> HIDDEN_SDBR void splitSet<std::string>(
+		template <> DLEXPORT_SDBR void splitSet<std::string>(
 			const std::string &instr, 
 			std::set<std::string> &expanded,
 			const std::map<std::string, std::string> *aliases);
@@ -42,7 +42,7 @@ namespace scatdb {
 		*
 		* Commonly-used to split up the results of a Ryan_Debug::ProcessInfo command-line structure.
 		**/
-		HIDDEN_SDBR void splitVector(
+		DLEXPORT_SDBR void splitVector(
 			const std::string &instr, std::vector<std::string> &out, char delim = '\0');
 		inline void splitNullVector(
 			const std::string &instr, std::vector<std::string> &out) { splitVector(instr, out); }
@@ -51,7 +51,7 @@ namespace scatdb {
 		*
 		* Commonly-used to split up the results of a Ryan_Debug::ProcessInfo environment structure.
 		**/
-		HIDDEN_SDBR void splitNullMap(
+		DLEXPORT_SDBR void splitNullMap(
 			const std::string &instr, std::map<std::string, std::string> &out);
 
 

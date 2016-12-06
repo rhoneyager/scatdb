@@ -142,7 +142,7 @@ namespace scatdb {
 		//attr.write(*vls_type, testb);
 	}
 	void db::writeHDFfile(const char* filename,
-		write_type wt, const char* hdfinternalpath) const {
+		SDBR_write_type wt, const char* hdfinternalpath) const {
 		scatdb::plugins::hdf5::useZLIB(true);
 		std::string sinternal;
 		if (!filename) SDBR_throw(scatdb::error::error_types::xBadInput)
@@ -153,11 +153,11 @@ namespace scatdb {
 		using namespace H5;
 		Exception::dontPrint();
 		std::shared_ptr<H5::H5File> file;
-		if (wt == write_type::SDBR_CREATE)
+		if (wt == SDBR_write_type::SDBR_CREATE)
 			file = std::shared_ptr<H5File>(new H5File(filename, H5F_ACC_CREAT));
-		else if (wt == write_type::SDBR_READWRITE)
+		else if (wt == SDBR_write_type::SDBR_READWRITE)
 			file = std::shared_ptr<H5File>(new H5File(filename, H5F_ACC_RDWR));
-		else if (wt == write_type::SDBR_TRUNCATE)
+		else if (wt == SDBR_write_type::SDBR_TRUNCATE)
 			file = std::shared_ptr<H5File>(new H5File(filename, H5F_ACC_TRUNC));
 		else SDBR_throw(scatdb::error::error_types::xUnsupportedIOaction)
 			.add<std::string>("Reason", "write type unhandled in code");

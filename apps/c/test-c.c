@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <inttypes.h>
 #include "../../scatdb/scatdb.h"
 
 void printError() {
-	const int buflen = 1024;
-	char buffer[buflen];
-	SDBR_err_msg(buflen, buffer);
+#define BUFLEN 1024
+	//const int buflen = 1024;
+	char buffer[BUFLEN];
+	SDBR_err_msg(BUFLEN, buffer);
 	printf("Error message:\n%s", buffer);
+#undef BUFLEN
 }
 
 int main(int argc, char** argv) {
@@ -35,9 +37,9 @@ int main(int argc, char** argv) {
 	}
 
 	// Count the number of lines in the database
-	int numEntries = SDBR_getNumRows(hdb);
-	printf("The database has %d rows.\n", numEntries);
-/*
+	uint64_t numEntries = SDBR_getNumRows(hdb);
+	printf("The database has %" PRIu64 " rows.\n", numEntries);
+
 	// Filter the database based on flake type
 	const char* fts = "3,4,5,6,20";
 	hdbFiltA = SDBR_filterIntByString(hdb, SDBR_FLAKETYPE, fts);
@@ -47,7 +49,7 @@ int main(int argc, char** argv) {
 		goto freeObjs;
 	}
 	// Filter the database based on frequency
-	hdbFiltB = SDBR_filterFloatByRange(hdbFiltA, SDBR_FREQUENCY, 13.f, 14.f);
+	hdbFiltB = SDBR_filterFloatByRange(hdbFiltA, SDBR_FREQUENCY_GHZ, 13.f, 14.f);
 	if (!hdbFiltB) {
 		printError();
 		retval = 4;
@@ -56,7 +58,7 @@ int main(int argc, char** argv) {
 
 	// Summarize the database
 	// Get the size of the summary table
-	int64_t statsNumFloats = 0, statsNumBytes = 0, count = 0;
+	uint64_t statsNumFloats = 0, statsNumBytes = 0, count = 0;
 	SDBR_getStatsTableSize(&statsNumFloats, &statsNumBytes);
 	summaryTable = malloc((size_t) statsNumBytes);
 	if (!summaryTable) {
@@ -70,16 +72,16 @@ int main(int argc, char** argv) {
 		retval = 6;
 		goto freeObjs;
 	}
-	printf("There are %d points used to calculate the statistics.\n\n", count);
+	printf("There are %" PRIu64 " points used to calculate the statistics.\n\n", count);
 	for (int i=0; i<SDBR_NUM_DATA_ENTRIES_STATS; ++i) {
 		printf("\t%s", SDBR_stringifyStatsColumn(i));
 	}
 	printf("\n");
 	int k=0;
-	for (int j=0; i<SDBR_NUM_DATA_ENTRIES_FLOATS; ++j) {
+	for (int j=0; j<SDBR_NUM_DATA_ENTRIES_FLOATS; ++j) {
 		printf("%s", SDBR_stringifyFloatsColumn(j));
 		for (int i=0; i<SDBR_NUM_DATA_ENTRIES_STATS; ++i) {
-			printf("\t%f", summaryTable[k]);
+			printf("\t%e", summaryTable[k]);
 			++k;
 		}
 		printf("\n");
@@ -89,7 +91,6 @@ int main(int argc, char** argv) {
 
 	// ... and display it
 
-*/
 
 	// Write the database
 	printf("Writing the database to outdb.csv\n");
