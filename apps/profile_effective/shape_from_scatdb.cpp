@@ -209,7 +209,7 @@ int main(int argc, char** argv) {
 				++pnum;
 				string profid("profile_");
 				profid.append(boost::lexical_cast<string>(pnum));
-				cerr << "\tProfile " << profid << endl << "\t\tWriting..." << endl;
+				cerr << "\n\tProfile " << profid << endl << "\t\tWriting..." << endl;
 				auto fpro = scatdb::plugins::hdf5::openOrCreateGroup(hProfiles, profid.c_str());
 				auto fraw = scatdb::plugins::hdf5::openOrCreateGroup(fpro, "Raw");
 				prof->writeHDF5File(fraw, profid.c_str());
