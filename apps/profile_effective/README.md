@@ -17,6 +17,13 @@ effective reflectivity. It subsets the scattering database according to user-pro
 frequency and temperature ranges. If multiple frequency ranges are provided, it will
 also calculate the dual frequency ratios.
 
-- The scatdb_profile_particle application calculates
+- The scatdb_profile_shape application calculates
 PSD-dependent bulk quantities that do not depend on frequency or temperature. These
-include expected fall velocities and ice water contents.
+include expected fall velocities and ice water contents. This application reads raw
+shape files (in hdf5 format) which have been preprocessed using scatdb_shape.
+
+- The scatdb_profile_shape_from_scatdb program calculates the same quantities, but
+using the data already available in the main scatdb database. Fall speeds and snowfall
+rates are calculated from Locatelli and Hobbs (1974)'s fall speed equations for unrimed
+and rimed aggregate snowflakes.
+
