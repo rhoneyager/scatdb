@@ -82,6 +82,7 @@ namespace scatdb {
 	private:
 		mutable std::shared_ptr<const data_stats> pStats;
 	};
+	typedef std::shared_ptr<const db> db_t;
 	class DLEXPORT_SDBR filter : public scatdb_base {
 	private:
 		std::shared_ptr<filterImpl> p;
@@ -102,8 +103,8 @@ namespace scatdb {
 		//void addFilterStartingRow(int row);
 
 		enum class sortDir { SDBR_ASCENDING, SDBR_DESCENDING };
-		void addSortFloat(db::data_entries::data_entries_floats param, sortDir);
-		void addSortInt(db::data_entries::data_entries_ints param, sortDir);
+		//void addSortFloat(db::data_entries::data_entries_floats param, sortDir);
+		//void addSortInt(db::data_entries::data_entries_ints param, sortDir);
 
 		std::shared_ptr<const db> apply(std::shared_ptr<const db>) const;
 		std::shared_ptr<const db> apply(const db*) const;

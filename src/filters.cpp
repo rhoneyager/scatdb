@@ -27,6 +27,7 @@ namespace scatdb {
 		std::vector<sortType> sorts;
 	};
 
+	/*
 	void filter::addSortFloat(db::data_entries::data_entries_floats param, filter::sortDir fsd) {
 		filterImpl::sortType nst;
 		nst.dir = fsd;
@@ -41,6 +42,7 @@ namespace scatdb {
 		nst.sortDataType = filterImpl::SortDataType::INTS;
 		p->sorts.push_back(std::move(nst));
 	}
+	*/
 
 	filter::filter() { p = std::shared_ptr<filterImpl>(new filterImpl); }
 	filter::~filter() {}
