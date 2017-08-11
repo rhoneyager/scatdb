@@ -440,6 +440,19 @@ int main(int argc, char** argv) {
 				float tWater = 273.15f;
 				scatdb::plugins::hdf5::addAttr<float>(fgrp, "temp_water_k", tWater);
 
+				Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic> bandProfileDBflakeCounts, 
+					bandProfileMedianCbks, bandProfileMeanCbks, bandProfileObsCounts, bandProfileParsum;
+				bandProfileDBflakeCounts.resize((int)allprofiles->size(), allprofiles->begin()->get()->getData()->rows());
+				bandProfileDBflakeCounts.setZero();
+				bandProfileMedianCbks.resize((int)allprofiles->size(), allprofiles->begin()->get()->getData()->rows());
+				bandProfileMedianCbks.setZero();
+				bandProfileMeanCbks.resize((int)allprofiles->size(), allprofiles->begin()->get()->getData()->rows());
+				bandProfileMeanCbks.setZero();
+				bandProfileObsCounts.resize((int)allprofiles->size(), allprofiles->begin()->get()->getData()->rows());
+				bandProfileObsCounts.setZero();
+				bandProfileParsum.resize((int)allprofiles->size(), allprofiles->begin()->get()->getData()->rows());
+				bandProfileParsum.setZero();
+
 				auto fprof = scatdb::plugins::hdf5::openOrCreateGroup(fgrp, "Profiles");
 
 				int i = 0;
@@ -458,10 +471,12 @@ int main(int argc, char** argv) {
 					auto data = prof->getData();
 					vector < shared_ptr<const db> > binned_raw;
 					vector<shared_ptr<const db::data_stats> > binned_stats;
-					Eigen::Matrix<float, Eigen::Dynamic, 1> parInts;
+					Eigen::Matrix<float, Eigen::Dynamic, 1> parInts, parBks;
 					Eigen::Matrix<uint64_t, Eigen::Dynamic, 1> parCounts;
 					parInts.resize(data->rows(), 1);
 					parInts.setZero();
+					parBks.resize(data->rows(), 1);
+					parBks.setZero();
 					parCounts.resize(data->rows(), 1);
 					parCounts.setZero();
 					auto fpartials = scatdb::plugins::hdf5::openOrCreateGroup(fpro, "Bins");
@@ -492,7 +507,11 @@ int main(int argc, char** argv) {
 						scatdb::plugins::hdf5::addAttr<float>(obin, "bin_mid_mm", binMid);
 						scatdb::plugins::hdf5::addAttr<float>(obin, "bin_width_mm", binWidth);
 						scatdb::plugins::hdf5::addAttr<float>(obin, "bin_conc_m^-4", binConc);
+						bandProfileObsCounts(i, row) = binConc;
 						float medCbk = sbin->floatStats(db::data_entries::SDBR_MEDIAN, db::data_entries::SDBR_CBK_M);
+						bandProfileMedianCbks(i, row) = medCbk;
+						float meanCbk = sbin->floatStats(db::data_entries::SDBR_MEAN, db::data_entries::SDBR_CBK_M);
+						bandProfileMeanCbks(i, row) = meanCbk;
 						// Calculate midpoint's size parameter
 						float sizep_md = 2.f * pi * binMid * 1000 / wvlen_um;
 						scatdb::plugins::hdf5::addAttr<float>(obin, "size_parameter_md", sizep_md);
@@ -507,19 +526,24 @@ int main(int argc, char** argv) {
 						}
 						scatdb::plugins::hdf5::addAttr<float>(obin, "bin_median_cbk_m^2", medCbk);
 						uint64_t count = sbin->count;
+						bandProfileDBflakeCounts(i, row) = (float) count;
 						// medbck has units of m^2
 						// binconc has units of m^-4
 						// binwidth has units of mm
 						// parInt has units of m^-1
 						float parInt = medCbk * binConc * (binWidth / 1000);
+
+						bandProfileParsum(i, row) = parInt;
 						parInts(row, 0) = parInt;
 						parCounts(row, 0) = count;
+						parBks(row, 0) = medCbk;
 						scatdb::plugins::hdf5::addAttr<float>(obin, "Partial_Integral_Sum_m^-1", parInt);
 						scatdb::plugins::hdf5::addAttr<uint64_t>(obin, "Bin_Counts", count);
 					}
 					// Save the binned results
 					scatdb::plugins::hdf5::addDatasetEigen(fpro, "Partial_Sums", parInts);
 					scatdb::plugins::hdf5::addDatasetEigen(fpro, "Partial_Counts", parCounts);
+					scatdb::plugins::hdf5::addDatasetEigen(fpro, "Partial_Median_Backscatters", parBks);
 					float intSum = parInts.sum();
 					scatdb::plugins::hdf5::addAttr<float>(fpro, "Inner_Sum_m^-1", intSum);
 
@@ -559,6 +583,13 @@ int main(int argc, char** argv) {
 
 					++i;
 				}
+
+
+				scatdb::plugins::hdf5::addDatasetEigen(fgrp, "DB_Flake_Counts", bandProfileDBflakeCounts);
+				scatdb::plugins::hdf5::addDatasetEigen(fgrp, "Median_Cbks", bandProfileMedianCbks);
+				scatdb::plugins::hdf5::addDatasetEigen(fgrp, "Mean_Cbks", bandProfileMeanCbks);
+				scatdb::plugins::hdf5::addDatasetEigen(fgrp, "Profile_Obs_Counts", bandProfileObsCounts);
+				scatdb::plugins::hdf5::addDatasetEigen(fgrp, "Profile_Partial_Sums", bandProfileParsum);
 				freqnum++;
 			}
 			filtnum++;
