@@ -24,9 +24,9 @@ namespace scatdb {
 			/// Provides a method for calculating the offsets from std::arrays of data
 #define ARRAYOFFSET(TYPE, INDEX) [](){TYPE a; return (size_t) &a[INDEX] - (size_t) &a; }()
 
-			DLEXPORT_SDBR std::shared_ptr<H5::Group> openOrCreateGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
-			DLEXPORT_SDBR std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
-			DLEXPORT_SDBR bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openOrCreateGroup(std::shared_ptr<H5::H5Location> base, const char* name);
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::H5Location> base, const char* name);
+			DLEXPORT_SDBR bool groupExists(std::shared_ptr<H5::H5Location> base, const char* name);
 
 			/// \param std::shared_ptr<H5::AtomType> is a pointer to a newly-constructed matching type
 			/// \returns A pair of (the matching type, a flag indicating passing by pointer or reference)
@@ -219,23 +219,23 @@ namespace scatdb {
 
 			/// Convenience function to either open or create a group
 			DLEXPORT_SDBR std::shared_ptr<H5::Group> openOrCreateGroup(
-				std::shared_ptr<H5::CommonFG> base, const char* name);
+				std::shared_ptr<H5::H5Location> base, const char* name);
 
 			/// Convenience function to check if a given group exists
-			DLEXPORT_SDBR bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR bool groupExists(std::shared_ptr<H5::H5Location> base, const char* name);
 
 			/// Convenience function to check if a symbolic link exists, and if the object being 
 			/// pointed to also exists.
 			/// \returns std::pair<bool,bool> refers to, respectively, if a symbolic link is found and 
 			/// if the symbolic link is good.
-			DLEXPORT_SDBR std::pair<bool, bool> symLinkExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::pair<bool, bool> symLinkExists(std::shared_ptr<H5::H5Location> base, const char* name);
 
 			/// \brief Convenience function to open a group, if it exists
 			/// \returns nullptr is the group does not exist.
-			DLEXPORT_SDBR std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::H5Location> base, const char* name);
 
 			/// Convenience function to check if a given dataset exists
-			DLEXPORT_SDBR bool datasetExists(std::shared_ptr<H5::CommonFG> base, const char* name);
+			DLEXPORT_SDBR bool datasetExists(std::shared_ptr<H5::H5Location> base, const char* name);
 
 			/// Convenience function to write an Eigen object, in the correct format
 			template <class DataType, class Container>

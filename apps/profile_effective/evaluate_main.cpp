@@ -332,6 +332,7 @@ int main(int argc, char** argv) {
 		if (!vm.count("frequencies")) {
 			freqranges.push_back(std::move(freq_info("Ku+13/14")));
 			freqranges.push_back(std::move(freq_info("Ka+35/36")));
+			freqranges.push_back(std::move(freq_info("W+93/96")));
 		}
 		else {
 			vector<string> sfilters = vm["frequencies"].as<vector<string> >();

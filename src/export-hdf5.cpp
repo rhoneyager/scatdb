@@ -57,7 +57,7 @@ namespace scatdb {
 			template <> void insertAttr<double>(H5::Attribute &, std::shared_ptr<H5::AtomType>, const double&);
 			*/
 
-			std::shared_ptr<H5::Group> openOrCreateGroup(std::shared_ptr<H5::CommonFG> base, const char* name)
+			std::shared_ptr<H5::Group> openOrCreateGroup(std::shared_ptr<H5::H5Location> base, const char* name)
 			{
 				std::shared_ptr<H5::Group> res;
 				try {
@@ -70,7 +70,7 @@ namespace scatdb {
 				return res;
 			}
 
-			std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::CommonFG> base, const char* name)
+			std::shared_ptr<H5::Group> openGroup(std::shared_ptr<H5::H5Location> base, const char* name)
 			{
 				std::shared_ptr<H5::Group> res;
 				try {
@@ -100,7 +100,7 @@ namespace scatdb {
 				}
 			}
 
-			bool groupExists(std::shared_ptr<H5::CommonFG> base, const char* name)
+			bool groupExists(std::shared_ptr<H5::H5Location> base, const char* name)
 			{
 				try {
 					H5::Group( base->openGroup( name ));
@@ -113,7 +113,7 @@ namespace scatdb {
 				}
 			}
 
-			std::pair<bool,bool> symLinkExists(std::shared_ptr<H5::CommonFG> base, const char* name)
+			std::pair<bool,bool> symLinkExists(std::shared_ptr<H5::H5Location> base, const char* name)
 			{
 				bool linkexists = false;
 				bool linkgood = false;
@@ -132,7 +132,7 @@ namespace scatdb {
 				return std::pair<bool,bool>(linkexists,linkgood);
 			}
 
-			bool datasetExists(std::shared_ptr<H5::CommonFG> base, const char* name)
+			bool datasetExists(std::shared_ptr<H5::H5Location> base, const char* name)
 			{
 				try {
 					H5::DataSet(base->openDataSet(name));

@@ -3,3 +3,4 @@ build
 *~
 /CMakeRules/FindHDF5.cmake
 /setPaths.bat
+/binaries/win64-msvc-1900-relwithdebinfo/bin/bin_x64_1900/log.txt

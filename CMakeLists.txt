@@ -1,10 +1,13 @@
 cmake_minimum_required (VERSION 2.8)
 project(scatdb C CXX)
-set(CMAKE_MODULE_PATH
-  ${CMAKE_MODULE_PATH}
-  "${CMAKE_SOURCE_DIR}/CMakeRules"
-  "${CMAKE_CURRENT_SOURCE_DIR}"
-)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/CMakeRules")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
+
+#set(CMAKE_MODULE_PATH
+	#${CMAKE_MODULE_PATH}
+  #"${CMAKE_SOURCE_DIR}/CMakeRules"
+  # "${CMAKE_CURRENT_SOURCE_DIR}"
+  #)
 
 include(addBaseProject)
 include(addBoostUniform)
@@ -41,9 +44,6 @@ include_directories(${HDF5_INCLUDE_DIRS} ${HDF5_INCLUDE_DIR_CPP})
 add_definitions(${HDF5_DEFINITIONS})
 
 set(HDF5_USE_STATIC_LIBRARIES OFF)
-find_package(HDF5 COMPONENTS C CXX REQUIRED)
-include_directories(${HDF5_INCLUDE_DIRS} ${HDF5_INCLUDE_DIR_CPP})
-add_definitions(${HDF5_DEFINITIONS})
 if(DEFINED HDF5_C_LIBRARIES)
 	set (h5libs ${HDF5_C_LIBRARIES} ${HDF5_CXX_LIBRARIES})
 else()
