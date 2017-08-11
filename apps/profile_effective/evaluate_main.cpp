@@ -133,14 +133,14 @@ public:
 			std::string bni = bandData.at(i).bandName;
 			for (size_t j = i + 1; j < numFreqs; ++j) {
 				std::string bnj = bandData.at(j).bandName;
-				std::string res("DPR_");
+				std::string res("DFR_");
 				res.append(bni);
 				res.append("_");
 				res.append(bnj);
 				res.append("_dBZe");
 				dprNames.at(k) = res;
 
-				// Calculate dprs.
+				// Calculate dfrs.
 				for (size_t r = 0; r < numRows; ++r) {
 					size_t coldbZe1 = (i * 3) + 2;
 					size_t coldbZe2 = (j * 3) + 2;
