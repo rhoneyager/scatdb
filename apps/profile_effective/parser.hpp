@@ -34,6 +34,7 @@ namespace scatdb {
 			tbl_p data;
 			float tempC;
 			defs::particle_types pt;
+			int profilenum;
 		public:
 			~forward_conc_table();
 			static forward_set_p import(const char* filename);
@@ -41,6 +42,7 @@ namespace scatdb {
 			static forward_set_p readHDF5File(const char* filename);
 			tbl_p getData() const;
 			float getTempC() const;
+			int getProfileNum() const;
 			defs::particle_types getParticleTypes() const;
 			void writeText(const char* filename) const;
 			void writeHDF5File(const char* filename, const char* intpath) const;

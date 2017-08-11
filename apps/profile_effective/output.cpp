@@ -8,6 +8,7 @@
 #include <hdf5.h>
 #include <H5Cpp.h>
 #include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 
 namespace scatdb {
 	namespace profiles {
@@ -129,8 +130,12 @@ namespace scatdb {
 				std::shared_ptr<forward_conc_table> leg(new forward_conc_table);
 				std::shared_ptr<tbl_t> dnew(new tbl_t);
 				auto dset = scatdb::plugins::hdf5::readDatasetEigen< tbl_t, Group>(grp, sccase, *(dnew.get()));
-
 				leg->data = dnew;
+
+				std::string sCase(sccase);
+				// Pattern goes Case_##
+				std::string sCaseNum = sCase.substr(5);
+				leg->profilenum = boost::lexical_cast<int>(sCaseNum);
 				scatdb::plugins::hdf5::readAttr(dset, "TempC", leg->tempC);
 				std::string casenm;
 				scatdb::plugins::hdf5::readAttr(dset, "Case", casenm);

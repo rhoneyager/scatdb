@@ -11,6 +11,9 @@ namespace scatdb {
 		float forward_conc_table::getTempC() const {
 			return tempC;
 		}
+		int forward_conc_table::getProfileNum() const {
+			return profilenum;
+		}
 		defs::particle_types forward_conc_table::getParticleTypes() const {
 			return pt;
 		}

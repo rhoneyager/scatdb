@@ -27,6 +27,7 @@ namespace {
 	std::shared_ptr<const scatdb::db> loadedDB;
 	std::mutex m_db;
 	bool finddberrgiven = false;
+	std::string lastFoundDBfile;
 }
 
 namespace scatdb {
@@ -45,6 +46,13 @@ namespace scatdb {
 		if (filename.size()) {
 			SDBR_log("scatdb", scatdb::logging::DEBUG_2,
 				"Using database file: " << filename);
+			lastFoundDBfile = filename;
+			return true;
+		}
+		if (lastFoundDBfile.size()) {
+			SDBR_log("scatdb", scatdb::logging::DEBUG_2,
+				"Using database file: " << lastFoundDBfile);
+			filename = lastFoundDBfile;
 			return true;
 		}
 
@@ -108,7 +116,9 @@ namespace scatdb {
 				"Environment variable '" << fkey << "' was not found.");
 			return false;
 		};
-		if (findEnv(std::string(scatdb_db_env), filename)) return true;
+		if (findEnv(std::string(scatdb_db_env), filename)) {
+			lastFoundDBfile = filename; return true;
+		}
 
 		// Check a few other places
 		SDBR_log("scatdb", scatdb::logging::DEBUG_2,
@@ -168,6 +178,7 @@ namespace scatdb {
 		if (filename.size()) {
 			SDBR_log("scatdb", scatdb::logging::DEBUG_2, 
 				"Using database file: " << filename);
+			lastFoundDBfile = filename;
 			return true;
 		}
 
