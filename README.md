@@ -12,6 +12,10 @@ This version improves upon the initial SCATDB release in several ways.
 
 For users of previous versions, you might want to take a look at the [CHANGELOG](./changelog.md).
 
+## Note
+
+SCATDB will be subsumed into [icedb](https://rhoneyager.github.io/libicedb) in 2018/2019. Icedb will feature much more data, from a larger group of collaborators, and will provide a "toolbox" for exploring snow particle shape and radiative properties. Unlike with SCATDB, phase functions will be easily accessible (though, if you want some of this data now, just send us an email).
+
 ## Building and Installing
 
 [See INSTALL.md](./INSTALL.md).
@@ -60,14 +64,13 @@ Papers
 
 ## Work in progress / planned work
 
-- Implementing phase function tables in the code
+- Implementing phase function tables in the code. We have this data; if you need it, send an email to \(<ryan.honeyager@noaa.gov>\).
 - Adding 220 GHz aggregate snowflake results
 - More work on the C interface is underway. An improved Fortran code is also anticipated.
 - Support for interpolation / extrapolation
 - Support for sorting
 - Support for estimating mean scattering behavior using the Locally-Weighted Scatterplot Smoothing (LOWESS) algorithm
 - Debian / Ubuntu / Fedora / Windows binary installable packages
-- Mac OS X and FreeBSD porting.
 
 ## License
 
@@ -86,5 +89,5 @@ The original scatdb and scatdb_ag databases are available [here](http://cirrus.m
 
 ## Problems / Suggestions / Contributions
 
-Contact Ryan Honeyager \(<rhoneyager@fsu.edu>\) or Guosheng Liu \(<gliu@fsu.edu>\).
+Contact Ryan Honeyager \(<ryan.honeyager@noaa.gov>\) or Guosheng Liu \(<gliu@fsu.edu>\).
 
